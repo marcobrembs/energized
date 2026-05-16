@@ -1,346 +1,1588 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Energized App Prototype</title>
-    <style>
-        :root {
-            --green: #34c759;
-            --red: #e05252;
-            --orange: #ff9500;
-            --blue: #007aff;
-            --bg: #f2f2f7;
-            --text: #1c1c1e;
-            --text-sec: #8e8e93;
-            --card-radius: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energized – Prototyp</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body {
-            background: #1a1a2e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            overflow: hidden;
-        }
+body {
+  background: #111;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  overflow: hidden;
+}
 
-        /* iPhone Shell */
-        .phone {
-            width: 390px;
-            height: 844px;
-            background: white;
-            border-radius: 50px;
-            box-shadow: 0 0 0 12px #1c1c1e, 0 20px 50px rgba(0,0,0,0.5);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+/* ── iPhone Shell ── */
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #f2f2f7;
+  border-radius: 54px;
+  box-shadow:
+    0 0 0 2px #3a3a3c,
+    0 0 0 14px #1c1c1e,
+    0 0 0 15px #3a3a3c,
+    0 40px 100px rgba(0,0,0,.8);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 34px;
+  background: #1c1c1e;
+  border-radius: 0 0 20px 20px;
+  z-index: 200;
+}
 
-        /* Notch */
-        .phone::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 150px; height: 30px;
-            background: #1c1c1e;
-            border-bottom-left-radius: 18px;
-            border-bottom-right-radius: 18px;
-            z-index: 1000;
-        }
+/* Status bar */
+.status-bar {
+  height: 50px;
+  background: #fff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.status-time { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+.status-icons { display: flex; align-items: center; gap: 6px; }
+.status-icons svg { width: 17px; height: 12px; fill: #1c1c1e; }
 
-        .status-bar {
-            height: 44px;
-            padding: 0 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            font-size: 14px;
-            font-weight: 600;
-            padding-bottom: 5px;
-            background: white;
-        }
+/* Scroll area */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll::-webkit-scrollbar { display: none; }
 
-        .screen-container {
-            flex: 1;
-            overflow-y: auto;
-            background: var(--bg);
-            padding-bottom: 90px; /* Platz für Nav */
-        }
-        .screen-container::-webkit-scrollbar { display: none; }
+/* Bottom nav */
+.nav {
+  height: 82px;
+  background: #fff;
+  border-top: .5px solid #c6c6c8;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+  flex-shrink: 0;
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn svg { width: 26px; height: 26px; }
+.nav-lbl { font-size: 10px; color: #8e8e93; font-weight: 400; }
+.nav-btn.active .nav-lbl { color: #34c759; }
+.nav-btn.active svg { color: #34c759; }
+.nav-btn svg { color: #8e8e93; transition: color .15s; }
 
-        .screen { display: none; padding-top: 10px; }
-        .screen.active { display: block; }
+/* Screens */
+.screen { display: none; }
+.screen.active { display: block; }
 
-        /* Shared UI Elements */
-        .card {
-            background: white;
-            border-radius: var(--card-radius);
-            margin: 10px 16px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
+/* ── Variables ── */
+:root {
+  --green: #34c759;
+  --green2: #228b3b;
+  --red: #e05252;
+  --orange: #ff9500;
+  --yellow: #f5a623;
+  --blue: #007aff;
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --text: #1c1c1e;
+  --text2: #8e8e93;
+  --sep: #e5e5ea;
+  --salmon: #d9857a;
+  --salmon-light: #e8a89f;
+}
 
-        .header-section {
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-        }
-        .avatar {
-            width: 45px; height: 45px;
-            border-radius: 50%;
-            background: url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100') center/cover;
-        }
+/* ═══════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════ */
 
-        .nav-tabs {
-            display: flex;
-            background: #e5e5ea;
-            border-radius: 12px;
-            padding: 2px;
-            margin: 10px 16px;
-        }
-        .nav-tab {
-            flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 500; border-radius: 10px; cursor: pointer;
-        }
-        .nav-tab.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.screen-bg { background: var(--bg); padding-bottom: 20px; }
 
-        /* Specific Component: Flow Diagram */
-        .flow-grid {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            gap: 10px;
-            text-align: center;
-        }
-        .flow-val { font-size: 22px; font-weight: 700; display: block; }
+/* Screen header */
+.hdr {
+  background: #fff;
+  padding: 14px 18px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hdr-title { font-size: 22px; font-weight: 700; letter-spacing: -.4px; }
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #e8c37a 0%, #d4935a 40%, #c07840 100%);
+  flex-shrink: 0;
+}
 
-        /* Icons */
-        .bottom-nav {
-            position: absolute;
-            bottom: 0; width: 100%; height: 85px;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; padding-top: 10px;
-            border-top: 0.5px solid #d1d1d6;
-        }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sec); font-size: 10px; cursor: pointer; transition: 0.2s; }
-        .nav-item.active { color: var(--text); }
-        .nav-icon { font-size: 24px; margin-bottom: 4px; }
+/* Segmented control (Tage/Monate/Jahr/Individuell) */
+.seg {
+  display: flex;
+  gap: 0;
+  margin: 10px 16px 6px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 2px;
+  border: .5px solid var(--sep);
+}
+.seg-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all .2s;
+  white-space: nowrap;
+}
+.seg-btn.active {
+  background: #1c1c1e;
+  color: #fff;
+  font-weight: 600;
+}
 
-        /* Colors & Helpers */
-        .green { color: var(--green); }
-        .red { color: var(--red); }
-        .bold { font-weight: 700; }
+/* Period navigator */
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px 8px;
+}
+.period-nav span { font-size: 16px; font-weight: 600; }
+.pnav-arrow {
+  font-size: 22px;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 4px 10px;
+  line-height: 1;
+}
 
-        /* Insights Bubbles */
-        .bubble-container { position: relative; height: 250px; margin: 10px; }
-        .bubble {
-            position: absolute; border-radius: 50%; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
-        }
+/* Chart tab toggle */
+.ctabs {
+  display: flex;
+  background: #f2f2f7;
+  border-radius: 9px;
+  padding: 2px;
+  margin-bottom: 12px;
+}
+.ctab {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all .18s;
+}
+.ctab.active {
+  background: #fff;
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
 
-        /* Banner styling */
-        .banner {
-            height: 100px; border-radius: 20px; color: white; display: flex; flex-direction: column; 
-            justify-content: flex-end; padding: 15px; position: relative; overflow: hidden;
-        }
-        .banner-emission { background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=400'); background-size: cover; }
-        .banner-savings { background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=400'); background-size: cover; }
-    </style>
+/* White card */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  margin: 0 16px 10px;
+  padding: 16px;
+}
+
+/* Stats row */
+.stats3 { display: flex; gap: 8px; margin: 0 16px 10px; }
+.stat-box {
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.stat-icon { font-size: 18px; margin-bottom: 3px; }
+.stat-val { font-size: 16px; font-weight: 700; line-height: 1.1; }
+.stat-unit { font-size: 11px; font-weight: 400; color: var(--text2); }
+.stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* Bar chart */
+.bars {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  position: relative;
+}
+.bars-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.bar {
+  flex: 1;
+  min-width: 4px;
+  border-radius: 2px;
+  transition: height .3s;
+}
+.bar.up { background: var(--green); border-radius: 2px 2px 0 0; align-self: flex-end; }
+.bar.dn { background: var(--red); border-radius: 0 0 2px 2px; align-self: flex-start; }
+.bar-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text2);
+  margin-top: 5px;
+}
+
+/* Legend */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.ldot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ═══════════════════════════════
+   SCREEN 1 – ZUHAUSE
+═══════════════════════════════ */
+
+/* Header with location + meta */
+.zh-hdr {
+  background: #fff;
+  padding: 12px 18px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.zh-loc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--text);
+}
+.zh-loc svg { width: 16px; height: 16px; color: #8e8e93; flex-shrink: 0; }
+.zh-meta { display: flex; gap: 16px; }
+.zh-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text);
+}
+.zh-meta-item svg { width: 15px; height: 15px; }
+
+/* Flow card */
+.flow-card {
+  background: #fff;
+  border-radius: 16px;
+  margin: 10px 16px;
+  padding: 16px 14px 14px;
+}
+.flow-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr 100px;
+  grid-template-rows: auto 28px auto;
+  column-gap: 0;
+  row-gap: 0;
+}
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.flow-node-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+.flow-node-icon svg { width: 32px; height: 32px; }
+.flow-kw { font-size: 20px; font-weight: 800; line-height: 1; }
+.flow-kw.g { color: var(--green); }
+.flow-kw.r { color: var(--red); }
+.flow-label { font-size: 12px; color: var(--text2); font-weight: 400; }
+
+/* Center arrow cell */
+.flow-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flow-arrow-h svg { width: 38px; height: 22px; }
+
+/* Down arrow middle row */
+.flow-row2-left { display: flex; justify-content: center; align-items: center; }
+.flow-row2-left svg { width: 22px; height: 28px; color: var(--green); }
+.flow-row2-mid { border-left: 1.5px dashed #d1d1d6; margin: 0 auto; height: 100%; width: 1px; }
+
+/* Mini chart top-right of flow card */
+.flow-minichart {
+  grid-column: 3;
+  grid-row: 2 / 4;
+  display: flex;
+  align-items: center;
+}
+
+/* Day tabs */
+.day-tabs {
+  display: flex;
+  margin: 10px 16px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 3px;
+  border: .5px solid var(--sep);
+}
+.day-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all .2s;
+  line-height: 1.2;
+}
+.day-tab.active { background: #1c1c1e; color: #fff; }
+.day-tab small { display: block; font-size: 10px; opacity: .7; }
+
+/* CO2 photo cards */
+.co2-row { display: flex; gap: 10px; margin: 0 16px 10px; }
+.co2-card {
+  flex: 1;
+  height: 96px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+.co2-card.emit {
+  background:
+    linear-gradient(180deg, rgba(60,20,10,.2) 0%, rgba(80,20,0,.75) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23c0734a'/%3E%3Crect x='20' y='30' width='15' height='70' fill='%23a05a30'/%3E%3Crect x='40' y='20' width='20' height='80' fill='%23b06a3a'/%3E%3Crect x='70' y='10' width='25' height='90' fill='%23a05020'/%3E%3Crect x='105' y='25' width='18' height='75' fill='%23b06030'/%3E%3Crect x='130' y='15' width='22' height='85' fill='%23985020'/%3E%3Crect x='160' y='35' width='16' height='65' fill='%23a06030'/%3E%3C/svg%3E") center/cover;
+}
+.co2-card.save {
+  background:
+    linear-gradient(180deg, rgba(10,40,10,.1) 0%, rgba(10,50,15,.7) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%232d6a2d'/%3E%3Cellipse cx='40' cy='40' rx='30' ry='35' fill='%231a4a1a'/%3E%3Cellipse cx='100' cy='35' rx='35' ry='38' fill='%23235a23'/%3E%3Cellipse cx='160' cy='42' rx='28' ry='32' fill='%231e521e'/%3E%3Cellipse cx='70' cy='60' rx='25' ry='28' fill='%231a4a1a'/%3E%3Cellipse cx='140' cy='55' rx='30' ry='33' fill='%23236023'/%3E%3C/svg%3E") center/cover;
+}
+.co2-num { font-size: 28px; font-weight: 900; letter-spacing: -.5px; line-height: 1; }
+.co2-lbl { font-size: 11px; line-height: 1.3; opacity: .95; margin-top: 2px; }
+
+/* ═══════════════════════════════
+   SCREEN 2 – SPEICHER
+═══════════════════════════════ */
+
+.btn-row { display: flex; gap: 10px; padding: 6px 16px 8px; align-items: center; }
+.btn-dark {
+  flex: 1;
+  background: #1c1c1e;
+  color: #fff;
+  border-radius: 12px;
+  padding: 11px 0;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+.btn-info {
+  width: 40px; height: 40px;
+  border-radius: 20px;
+  border: 1.5px solid var(--sep);
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Battery status cards */
+.bat-row { display: flex; gap: 8px; margin: 0 16px 10px; }
+.bat-card {
+  flex: 1;
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+}
+.bat-card.av { background: #d9857a; }
+.bat-card.dc { background: #ebbdb7; }
+.bat-kwh { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -.4px; }
+.bat-pct { font-size: 16px; font-weight: 700; color: #fff; }
+.bat-lbl { font-size: 12px; color: rgba(255,255,255,.8); margin-top: 4px; }
+
+/* Price chart */
+.price-svg { width: 100%; margin: 4px 0 8px; display: block; }
+.price-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 11.5px;
+}
+.price-legend span { display: flex; align-items: center; gap: 5px; }
+.pleg-line {
+  width: 18px; height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Source progress bars */
+.src-item { margin-bottom: 10px; }
+.src-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.src-pct { font-weight: 600; }
+.src-bar {
+  height: 8px;
+  background: #f2f2f7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.src-fill { height: 100%; border-radius: 4px; }
+.src-fill.solar { background: #ffd60a; }
+.src-fill.wind { background: #007aff; }
+.src-fill.other { background: #c7c7cc; }
+
+/* ═══════════════════════════════
+   SCREEN 3 – INSIGHTS
+═══════════════════════════════ */
+
+.search-bar {
+  margin: 10px 16px 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text2);
+}
+.search-bar svg { width: 16px; height: 16px; color: var(--text2); flex-shrink: 0; }
+
+.scroll-chips {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 2px;
+  overflow-x: auto;
+}
+.scroll-chips::-webkit-scrollbar { display: none; }
+.chip-card {
+  flex-shrink: 0;
+  width: 155px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 13px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.45;
+}
+
+.more-link {
+  padding: 6px 16px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+/* Category bars */
+.cat-section { padding: 0 0 4px; }
+.cat-row { display: flex; gap: 8px; margin: 4px 0; align-items: center; }
+.cat-kWh { width: 34px; font-size: 12px; color: var(--text2); text-align: right; flex-shrink: 0; }
+.cat-bar {
+  flex: 1;
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.cat-bar:active { opacity: .8; }
+.cat-bar-left { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text); }
+.cat-pct { font-size: 14px; font-weight: 700; color: var(--text); }
+
+/* Device bubbles */
+.bubble-wrap { position: relative; height: 250px; margin: 4px 0 8px; }
+.bub {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .2s;
+  text-align: center;
+}
+.bub:active { transform: scale(.94); }
+.bub-icon { font-size: 20px; line-height: 1; }
+.bub-kwh { font-size: 12px; font-weight: 700; margin-top: 2px; }
+
+/* ═══════════════════════════════
+   SCREEN 4 – AUTOMATION
+═══════════════════════════════ */
+
+.auto-list { background: #fff; border-radius: 16px; margin: 0 16px 10px; overflow: hidden; }
+.auto-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  cursor: pointer;
+  border-bottom: .5px solid #f2f2f7;
+  transition: background .15s;
+}
+.auto-item:last-child { border-bottom: none; }
+.auto-item:active { background: #f9f9f9; }
+.auto-icon {
+  width: 48px; height: 48px;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.auto-text { flex: 1; }
+.auto-name { font-size: 16px; font-weight: 600; color: var(--text); }
+.auto-desc { font-size: 13px; color: var(--text2); margin-top: 2px; line-height: 1.35; }
+.auto-chev { color: #c7c7cc; font-size: 18px; }
+
+.gallery-section { margin: 0 16px 10px; }
+.gallery-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.gallery-sub { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+.gallery-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.gallery-chip {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  border: .5px solid var(--sep);
+}
+.gallery-chip .plus {
+  width: 20px; height: 20px;
+  background: #f2f2f7;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text2);
+  margin-left: auto;
+}
+
+.impact-cta {
+  margin: 4px 16px 10px;
+  background: #1c1c1e;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 15px 0;
+  width: calc(100% - 32px);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════
+   SCREEN 5 – IMPACT
+═══════════════════════════════ */
+
+.impact-hero {
+  margin: 10px 16px;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(10,35,5,.3) 0%, rgba(10,45,10,.65) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Crect width='400' height='120' fill='%23234a20'/%3E%3Cellipse cx='50' cy='50' rx='45' ry='55' fill='%231a3a15'/%3E%3Cellipse cx='130' cy='45' rx='50' ry='58' fill='%231e4a18'/%3E%3Cellipse cx='210' cy='52' rx='42' ry='52' fill='%231a3e14'/%3E%3Cellipse cx='290' cy='48' rx='48' ry='56' fill='%23205018'/%3E%3Cellipse cx='370' cy='55' rx='44' ry='52' fill='%231a4015'/%3E%3Cellipse cx='90' cy='80' rx='38' ry='42' fill='%231a3a12'/%3E%3Cellipse cx='180' cy='75' rx='42' ry='48' fill='%23204815'/%3E%3Cellipse cx='330' cy='78' rx='40' ry='46' fill='%231c4214'/%3E%3C/svg%3E") center/cover;
+}
+.impact-num { font-size: 52px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.impact-unit { font-size: 15px; font-weight: 500; opacity: .92; margin-top: 2px; }
+
+/* Renew cards */
+.renew-row { display: flex; gap: 10px; margin: 0 16px 10px; }
+.renew-card {
+  flex: 1;
+  height: 80px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.renew-card.wind {
+  background: linear-gradient(160deg,#3a5a8a,#1e3460),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='80'%3E%3Crect width='200' height='80' fill='%231e3460'/%3E%3Ccircle cx='100' cy='30' r='50' fill='%232a4070' opacity='.6'/%3E%3C/svg%3E") center/cover;
+}
+.renew-card.tree {
+  background: linear-gradient(160deg,#2a6a30,#124018),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='80'%3E%3Crect width='200' height='80' fill='%231a4a18'/%3E%3Cellipse cx='100' cy='40' rx='80' ry='55' fill='%23205020' opacity='.7'/%3E%3C/svg%3E") center/cover;
+}
+.renew-num { font-size: 20px; font-weight: 800; }
+.renew-lbl { font-size: 11px; opacity: .88; margin-top: 1px; }
+
+/* Compare cards */
+.cmp-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 16px 6px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.cmp-card:active { opacity: .8; }
+.cmp-card.best { background: #d4edda; border-color: #27ae60; }
+.cmp-card.mine { background: #fff; border-color: var(--sep); }
+.cmp-card.comm { background: #fff5e6; border-color: var(--orange); }
+.cmp-card.avg  { background: #fdecea; border-color: var(--red); }
+.cmp-icon { font-size: 22px; }
+.cmp-name { font-size: 13px; font-weight: 600; }
+.cmp-val { font-size: 12px; color: var(--text2); margin-top: 1px; }
+
+/* Milestones */
+.ms-card {
+  background: #fff;
+  border-radius: 14px;
+  margin: 0 16px 8px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid #ffd60a;
+}
+.ms-icon { font-size: 26px; flex-shrink: 0; }
+.ms-body { flex: 1; }
+.ms-title { font-size: 14px; font-weight: 600; }
+.ms-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.ms-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.ms-badge.g { background: #d4edda; color: #1a6a30; }
+.ms-badge.r { background: #fdecea; color: #c0392b; }
+.ms-badge.o { background: #fff5e6; color: #b05a00; }
+
+/* Community overlay */
+.overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,.55);
+  align-items: flex-end;
+}
+.overlay.show { display: flex; }
+.ov-sheet {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-height: 82%;
+  overflow-y: auto;
+  padding-bottom: 28px;
+}
+.ov-sheet::-webkit-scrollbar { display: none; }
+.ov-handle {
+  width: 36px; height: 4px;
+  background: #e5e5ea;
+  border-radius: 2px;
+  margin: 10px auto 12px;
+}
+.ov-hero {
+  margin: 0 16px 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  padding: 22px 18px 18px;
+  color: #fff;
+  text-align: center;
+  background:
+    linear-gradient(180deg,rgba(10,40,5,.25) 0%,rgba(10,50,10,.7) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Crect width='400' height='120' fill='%231e4a18'/%3E%3Cellipse cx='80' cy='60' rx='70' ry='70' fill='%23184015' opacity='.8'/%3E%3Cellipse cx='250' cy='55' rx='80' ry='75' fill='%231a3a14' opacity='.8'/%3E%3C/svg%3E") center/cover;
+}
+.ov-num { font-size: 40px; font-weight: 900; letter-spacing: -1px; }
+.ov-unit { font-size: 13px; opacity: .9; }
+.ov-text { font-size: 12px; opacity: .85; margin-top: 4px; line-height: 1.4; }
+.ov-body { padding: 0 16px 4px; font-size: 14px; line-height: 1.65; color: #333; }
+.ov-body p { margin-bottom: 12px; }
+.ov-savings {
+  display: flex;
+  gap: 10px;
+  margin: 4px 16px 16px;
+}
+.ov-sav-card {
+  flex: 1;
+  border-radius: 14px;
+  padding: 14px;
+  color: #fff;
+  background: linear-gradient(135deg,#1e6b2e,#2d5a1b);
+  text-align: center;
+}
+.ov-sav-num { font-size: 24px; font-weight: 800; }
+.ov-sav-lbl { font-size: 12px; opacity: .88; margin-top: 2px; }
+.ov-share { text-align: center; font-size: 15px; font-weight: 600; cursor: pointer; padding: 4px 0 8px; }
+
+/* Section label */
+.sec-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  padding: 12px 16px 5px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+</style>
 </head>
 <body>
+<div class="phone" id="phone">
 
-    <div class="phone">
-        <div class="status-bar">
-            <span>14:01</span>
-            <span>📶 🔋</span>
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="status-time">14:01</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 17 12"><path d="M8.5 3C5.6 3 3 4.2 1.2 6.2L0 5C2.1 2.6 5.1 1 8.5 1s6.4 1.6 8.5 4L15.8 6.2C14 4.2 11.4 3 8.5 3zm0 4c-1.7 0-3.2.7-4.3 1.8L3 7.6C4.4 6.3 6.3 5.5 8.5 5.5s4.1.8 5.5 2.1l-1.2 1.2C11.7 7.7 10.2 7 8.5 7zm0 4c-.9 0-1.7.4-2.3 1L8.5 14.2l2.3-2.2c-.6-.6-1.4-1-2.3-1z" fill="currentColor"/></svg>
+      <svg viewBox="0 0 25 12"><rect x="0" y="1" width="21" height="10" rx="3" ry="3" stroke="currentColor" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"/><rect x="22" y="3.5" width="2.5" height="5" rx="1" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="scroll" id="mainscroll">
+
+    <!-- ═══════════════ ZUHAUSE ═══════════════ -->
+    <div class="screen active screen-bg" id="s-zuhause">
+
+      <div class="zh-hdr">
+        <div>
+          <div class="zh-loc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
+            Würzburg
+          </div>
+          <div class="zh-meta">
+            <div class="zh-meta-item">
+              <svg viewBox="0 0 24 24" fill="#f5a623"><path d="M11.8 10.9c-2.3-.6-3-1.2-3-2.2 0-1.1 1-1.9 2.7-1.9 1.8 0 2.5.9 2.5 2.1h2.2c0-1.7-1.1-3.3-3.2-3.8V3h-3v2.1C9.6 5.5 8 6.9 8 8.8c0 2.3 1.9 3.4 4.7 4.1 2.5.6 3 1.5 3 2.5 0 .7-.5 1.8-2.7 1.8-2.1 0-2.9-1-3-2.1H7.8c.1 2.2 1.7 3.4 3.7 3.8V21h3v-2.1c1.5-.3 2.9-1.2 2.9-3 0-2.3-2-3.2-4.6-3.9z"/></svg>
+              16 Cent/kWh
+            </div>
+            <div class="zh-meta-item">
+              <svg viewBox="0 0 24 24" fill="#34c759"><path d="M17 8C8 10 5.9 16.2 3.2 21.4c-.3.6.6 1 .9.4 1.5-2.8 4.1-6.7 9.9-8.4V21l7-8-7-5v2.4z"/></svg>
+              52g CO₂eq/kWh
+            </div>
+          </div>
         </div>
+        <div class="avatar"></div>
+      </div>
 
-        <div class="screen-container">
-            <!-- SCREEN: ZUHAUSE -->
-            <div id="zuhause" class="screen active">
-                <div class="header-section">
-                    <div>
-                        <div style="font-weight: 600; font-size: 17px;">📍 Würzburg</div>
-                        <div style="font-size: 13px; color: var(--text-sec);">🟡 16 Cent/kWh • 🍃 52g CO₂eq/kWh</div>
-                    </div>
-                    <div class="avatar"></div>
-                </div>
+      <!-- Energy flow -->
+      <div class="flow-card">
+        <div style="display:grid;grid-template-columns:100px 1fr 100px;grid-template-rows:auto 30px auto;align-items:center;">
 
-                <div class="card">
-                    <div class="flow-grid">
-                        <div>
-                            <span class="flow-val red">2.1 kW</span>
-                            <span style="font-size: 12px; color: var(--text-sec);">Stromnetz</span>
-                        </div>
-                        <div style="font-size: 24px; color: var(--green);">➔</div>
-                        <div>
-                            <span class="flow-val green">0.6 kW</span>
-                            <span style="font-size: 12px; color: var(--text-sec);">Haushalt</span>
-                        </div>
-                    </div>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <div style="color: var(--green); font-size: 20px;">⬇</div>
-                        <div style="display: inline-block;">
-                            <span class="flow-val green">1.5 kW</span>
-                            <span style="font-size: 12px; color: var(--text-sec);">Speicher</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="nav-tabs">
-                    <div class="nav-tab">Gestern</div>
-                    <div class="nav-tab active">Heute</div>
-                    <div class="nav-tab">Morgen</div>
-                </div>
-
-                <div style="display: flex; gap: 8px; padding: 0 16px;">
-                    <div class="card" style="flex:1; margin:0; text-align:center;">
-                        <div class="bold">7.5 kWh</div>
-                        <div style="font-size:10px; color:var(--text-sec)">Verbrauch</div>
-                    </div>
-                    <div class="card" style="flex:1; margin:0; text-align:center;">
-                        <div class="bold">24.2 Ct</div>
-                        <div style="font-size:10px; color:var(--text-sec)">Preis</div>
-                    </div>
-                    <div class="card" style="flex:1; margin:0; text-align:center;">
-                        <div class="bold">1.82 €</div>
-                        <div style="font-size:10px; color:var(--text-sec)">Kosten</div>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 16px;">
-                    <div class="banner banner-emission">
-                        <div style="font-size: 24px; font-weight: 800;">1177</div>
-                        <div style="font-size: 11px;">Gramm CO₂eq Emissionen</div>
-                    </div>
-                    <div class="banner banner-savings">
-                        <div style="font-size: 24px; font-weight: 800;">424</div>
-                        <div style="font-size: 11px;">Gramm CO₂eq Einsparungen</div>
-                    </div>
-                </div>
+          <!-- Row 1 -->
+          <div class="flow-node">
+            <div class="flow-node-icon">
+              <svg viewBox="0 0 32 32" fill="none"><rect x="3" y="3" width="26" height="26" rx="2" stroke="#1c1c1e" stroke-width="2"/><line x1="3" y1="11" x2="29" y2="11" stroke="#1c1c1e" stroke-width="1.5"/><line x1="3" y1="19" x2="29" y2="19" stroke="#1c1c1e" stroke-width="1.5"/><line x1="11" y1="3" x2="11" y2="29" stroke="#1c1c1e" stroke-width="1.5"/><line x1="19" y1="3" x2="19" y2="29" stroke="#1c1c1e" stroke-width="1.5"/></svg>
             </div>
+            <div class="flow-kw r">2.1 kW</div>
+            <div class="flow-label">Stromnetz</div>
+          </div>
 
-            <!-- SCREEN: SPEICHER -->
-            <div id="speicher" class="screen">
-                <div class="header-section">
-                    <h2 style="font-size: 22px;">🔋 Speicher</h2>
-                    <div class="avatar"></div>
-                </div>
-                <div class="nav-tabs"><div class="nav-tab active">Tage</div><div class="nav-tab">Monate</div><div class="nav-tab">Jahr</div></div>
-                
-                <div style="display: flex; gap: 10px; margin: 0 16px;">
-                    <div class="card" style="flex: 2; margin: 0; background: #e8b4a8;">
-                        <div class="bold" style="font-size: 24px;">5.4 kWh</div>
-                        <div style="font-size: 14px;">83.1% Verfügbar</div>
-                    </div>
-                    <div class="card" style="flex: 1; margin: 0; background: #f5d8d2;">
-                        <div class="bold" style="font-size: 18px;">1.1 kWh</div>
-                        <div style="font-size: 12px;">Entladen</div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div style="font-weight: 600; margin-bottom: 10px;">Ladeverhalten</div>
-                    <div style="height: 120px; display: flex; align-items: flex-end; justify-content: space-around;">
-                        <div style="width: 8px; height: 30%; background: var(--green); border-radius: 4px;"></div>
-                        <div style="width: 8px; height: 50%; background: var(--green); border-radius: 4px;"></div>
-                        <div style="width: 8px; height: 80%; background: var(--green); border-radius: 4px;"></div>
-                        <div style="width: 8px; height: 40%; background: var(--red); border-radius: 4px;"></div>
-                        <div style="width: 8px; height: 60%; background: var(--red); border-radius: 4px;"></div>
-                    </div>
-                </div>
+          <div style="display:flex;align-items:center;justify-content:center;">
+            <svg width="48" height="24" viewBox="0 0 48 24"><path d="M4 12 L40 12 M32 5 L40 12 L32 19" stroke="#34c759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+
+          <div class="flow-node">
+            <div class="flow-node-icon">
+              <svg viewBox="0 0 32 32" fill="none"><path d="M16 4L4 14h4v14h16V14h4L16 4z" stroke="#1c1c1e" stroke-width="2" stroke-linejoin="round"/></svg>
             </div>
+            <div class="flow-kw g">0.6 kW</div>
+            <div class="flow-label">Haushalt</div>
+          </div>
 
-            <!-- SCREEN: INSIGHTS -->
-            <div id="insights" class="screen">
-                <div class="header-section"><h2 style="font-size: 22px;">📈 Insights</h2><div class="avatar"></div></div>
-                <div class="nav-tabs" style="background:#f2f2f7; border: 1px solid #ddd;">
-                    <div class="nav-tab active" onclick="toggleInsightView('kat', this)">Kategorien</div>
-                    <div class="nav-tab" onclick="toggleInsightView('dev', this)">Geräte</div>
-                </div>
+          <!-- Row 2 (middle) -->
+          <div style="display:flex;justify-content:center;align-items:center;">
+            <svg width="24" height="30" viewBox="0 0 24 30"><path d="M12 2 L12 26 M5 19 L12 26 L19 19" stroke="#34c759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <div style="border-left:1.5px dashed #d1d1d6;height:100%;margin:0 auto;width:1px;"></div>
+          <!-- mini chart top-right - shown in row 2+3 -->
+          <div style="grid-row: 2 / 4;display:flex;align-items:center;padding-left:4px;">
+            <svg viewBox="0 0 100 60" width="100" height="60">
+              <rect x="0"  y="28" width="5" height="12" fill="#34c759" rx="1"/>
+              <rect x="7"  y="22" width="5" height="18" fill="#34c759" rx="1"/>
+              <rect x="14" y="16" width="5" height="24" fill="#34c759" rx="1"/>
+              <rect x="21" y="10" width="5" height="30" fill="#34c759" rx="1"/>
+              <rect x="28" y="6"  width="5" height="34" fill="#34c759" rx="1"/>
+              <rect x="35" y="4"  width="5" height="26" fill="#34c759" rx="1"/>
+              <rect x="42" y="12" width="5" height="18" fill="#34c759" rx="1"/>
+              <rect x="49" y="30" width="5" height="4"  fill="#34c759" rx="1"/>
+              <rect x="56" y="32" width="5" height="12" fill="#e05252" rx="1"/>
+              <rect x="63" y="28" width="5" height="20" fill="#e05252" rx="1"/>
+              <rect x="70" y="22" width="5" height="30" fill="#e05252" rx="1"/>
+              <rect x="77" y="18" width="5" height="34" fill="#e05252" rx="1"/>
+              <rect x="84" y="24" width="5" height="28" fill="#e05252" rx="1"/>
+              <rect x="91" y="28" width="5" height="22" fill="#e05252" rx="1"/>
+              <line x1="52" y1="0" x2="52" y2="60" stroke="#c7c7cc" stroke-width=".8" stroke-dasharray="3,2"/>
+              <text x="38" y="8" font-size="7" fill="#8e8e93">14:01</text>
+            </svg>
+          </div>
 
-                <div id="insight-kat" class="card">
-                    <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 15px; height: 40px; background: #ffb3ba; border-radius: 4px;"></div>
-                        <div style="flex: 1;">Haushalt <span style="float: right;" class="bold">42%</span></div>
-                    </div>
-                    <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 15px; height: 40px; background: #ffd4a3; border-radius: 4px;"></div>
-                        <div style="flex: 1;">Unterhaltung <span style="float: right;" class="bold">24%</span></div>
-                    </div>
-                    <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 15px; height: 40px; background: #b3d9b3; border-radius: 4px;"></div>
-                        <div style="flex: 1;">Kommunikation <span style="float: right;" class="bold">16%</span></div>
-                    </div>
-                </div>
-
-                <div id="insight-dev" style="display: none;" class="bubble-container">
-                    <div class="bubble" style="width:100px; height:100px; background:#ffd4a3; top:20px; left:20px;">🫙 9.4 kWh</div>
-                    <div class="bubble" style="width:80px; height:80px; background:#ffb3ba; top:40px; right:40px;">❄️ 12.2 kWh</div>
-                    <div class="bubble" style="width:70px; height:70px; background:#b3d9b3; bottom:30px; left:60px;">📺 5.9 kWh</div>
-                </div>
+          <!-- Row 3 -->
+          <div class="flow-node" style="padding-top:4px;">
+            <div class="flow-node-icon">
+              <svg viewBox="0 0 32 32" fill="none"><rect x="4" y="8" width="24" height="16" rx="3" stroke="#1c1c1e" stroke-width="2"/><rect x="28" y="12" width="3" height="8" rx="1.5" fill="#1c1c1e"/><rect x="6" y="10" width="14" height="12" rx="2" fill="#34c759"/></svg>
             </div>
-
-            <!-- SCREEN: AUTOMATION -->
-            <div id="automation" class="screen">
-                <div class="header-section"><h2 style="font-size: 22px;">💡 Automation</h2><div class="avatar"></div></div>
-                <div class="card" style="background: #ffdbdb; display: flex; align-items: center; gap: 15px;">
-                    <div style="font-size: 30px;">🧺</div>
-                    <div><div class="bold">Waschmaschine</div><div style="font-size: 12px;">Schaltet zu niedrigen Preisen ein</div></div>
-                </div>
-                <div class="card" style="background: #fff0db; display: flex; align-items: center; gap: 15px;">
-                    <div style="font-size: 30px;">📺</div>
-                    <div><div class="bold">Fernseher</div><div style="font-size: 12px;">Nachts vollständig aus</div></div>
-                </div>
-            </div>
-
-            <!-- SCREEN: IMPACT -->
-            <div id="impact" class="screen">
-                <div class="header-section"><h2 style="font-size: 22px;">🌿 Impact</h2><div class="avatar"></div></div>
-                <div class="impact-hero" style="background: linear-gradient(135deg, #1e6b2e, #2d5a1b); color: white; text-align: center; padding: 30px; margin: 10px 16px; border-radius: 25px;">
-                    <div style="font-size: 48px; font-weight: 900;">424</div>
-                    <div>Gramm CO₂eq Einsparungen</div>
-                </div>
-                <div class="card">
-                    <div style="margin-bottom: 10px; font-weight: 600;">Vergleich (Gramm CO₂eq)</div>
-                    <div style="height: 20px; background: var(--green); width: 70%; border-radius: 10px; margin-bottom: 8px; font-size: 11px; padding: 3px 10px; color: white;">Dein Zuhause: 6856</div>
-                    <div style="height: 20px; background: var(--orange); width: 85%; border-radius: 10px; margin-bottom: 8px; font-size: 11px; padding: 3px 10px; color: white;">Community: 7301</div>
-                    <div style="height: 20px; background: var(--red); width: 100%; border-radius: 10px; font-size: 11px; padding: 3px 10px; color: white;">DE Schnitt: 8747</div>
-                </div>
-            </div>
+            <div class="flow-kw g">1.5 kW</div>
+            <div class="flow-label">Speicher</div>
+          </div>
+          <div></div>
 
         </div>
+      </div>
 
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="showScreen('zuhause', this)"><span class="nav-icon">🏠</span><span>Zuhause</span></div>
-            <div class="nav-item" onclick="showScreen('speicher', this)"><span class="nav-icon">🔋</span><span>Speicher</span></div>
-            <div class="nav-item" onclick="showScreen('insights', this)"><span class="nav-icon">📈</span><span>Insights</span></div>
-            <div class="nav-item" onclick="showScreen('automation', this)"><span class="nav-icon">💡</span><span>Automation</span></div>
-            <div class="nav-item" onclick="showScreen('impact', this)"><span class="nav-icon">🌿</span><span>Impact</span></div>
+      <!-- Day tabs -->
+      <div class="day-tabs">
+        <div class="day-tab" onclick="dayTab(0,this)">Gestern</div>
+        <div class="day-tab active" onclick="dayTab(1,this)">Heute</div>
+        <div class="day-tab" onclick="dayTab(2,this)">Morgen<small>Prognose</small></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats3">
+        <div class="stat-box">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-val">7.5 <span class="stat-unit">kWh</span></div>
+          <div class="stat-lbl">Verbrauch</div>
         </div>
+        <div class="stat-box">
+          <div class="stat-icon">€</div>
+          <div class="stat-val">24.2 <span class="stat-unit">Ct/kWh</span></div>
+          <div class="stat-lbl">Preis</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-val">1.82 <span class="stat-unit">€</span></div>
+          <div class="stat-lbl">Kosten</div>
+        </div>
+      </div>
+
+      <!-- CO2 -->
+      <div class="co2-row">
+        <div class="co2-card emit">
+          <div class="co2-num">1177</div>
+          <div class="co2-lbl">Gramm CO₂eq<br>Emissionen</div>
+        </div>
+        <div class="co2-card save">
+          <div class="co2-num">424</div>
+          <div class="co2-lbl">Gramm CO₂eq<br>Einsparungen</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" onclick="ctab(this)">Ladeverhalten</div>
+          <div class="ctab" onclick="ctab(this)">Verbrauch</div>
+        </div>
+        <div class="bars" id="zh-bars"></div>
+        <div class="bar-axis"><span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:var(--green)"></span>5.5 kWh Speicherladung</span>
+          <span><span class="ldot" style="background:var(--red)"></span>1.1 kWh Speicherentladung</span>
+        </div>
+      </div>
     </div>
 
-    <script>
-        function showScreen(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-        }
+    <!-- ═══════════════ SPEICHER ═══════════════ -->
+    <div class="screen screen-bg" id="s-speicher">
+      <div class="hdr">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect x="4" y="8" width="24" height="16" rx="3" stroke="#1c1c1e" stroke-width="2"/><rect x="28" y="12" width="3" height="8" rx="1.5" fill="#1c1c1e"/><rect x="6" y="10" width="14" height="12" rx="2" fill="#34c759"/></svg>
+          <span class="hdr-title">Speicher</span>
+        </div>
+        <div class="avatar"></div>
+      </div>
 
-        function toggleInsightView(view, el) {
-            document.getElementById('insight-kat').style.display = view === 'kat' ? 'block' : 'none';
-            document.getElementById('insight-dev').style.display = view === 'dev' ? 'block' : 'none';
-            el.parentNode.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
-    </script>
+      <div class="seg">
+        <div class="seg-btn active" onclick="seg(this)">Tage</div>
+        <div class="seg-btn" onclick="seg(this)">Monate</div>
+        <div class="seg-btn" onclick="seg(this)">Jahr</div>
+        <div class="seg-btn" onclick="seg(this)">Individuell</div>
+      </div>
+
+      <div class="period-nav">
+        <span class="pnav-arrow">‹</span>
+        <span>Heute</span>
+        <span class="pnav-arrow">›</span>
+      </div>
+
+      <div class="btn-row">
+        <div class="btn-dark">Status</div>
+        <div class="btn-info">ⓘ</div>
+      </div>
+
+      <div class="bat-row">
+        <div class="bat-card av">
+          <div class="bat-kwh">5.4 kWh</div>
+          <div class="bat-pct">83.1 %</div>
+          <div class="bat-lbl">Verfügbar</div>
+        </div>
+        <div class="bat-card dc">
+          <div class="bat-kwh">1.1 kWh</div>
+          <div class="bat-pct">16.9 %</div>
+          <div class="bat-lbl">Entladen</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" onclick="ctab(this)">Ladeverhalten</div>
+          <div class="ctab" onclick="ctab(this)">Verbrauch</div>
+        </div>
+        <div class="bars" id="sp-bars"></div>
+        <div class="bar-axis"><span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:var(--green)"></span>5.5 kWh Speicherladung</span>
+          <span><span class="ldot" style="background:var(--red)"></span>1.1 kWh Speicherentladung</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" onclick="ctab(this)">Strompreis</div>
+          <div class="ctab" onclick="ctab(this)">Emissionen</div>
+        </div>
+        <svg class="price-svg" viewBox="0 0 358 80" height="80">
+          <line x1="0" y1="70" x2="358" y2="70" stroke="#f2f2f7" stroke-width="1"/>
+          <line x1="0" y1="50" x2="358" y2="50" stroke="#f2f2f7" stroke-width="1"/>
+          <line x1="0" y1="30" x2="358" y2="30" stroke="#f2f2f7" stroke-width="1"/>
+          <polyline points="0,60 25,56 50,52 75,38 95,22 108,8 118,18 130,40 150,50 170,54 195,50 215,46 240,40 265,55 290,60 320,58 358,56"
+            fill="none" stroke="#e05252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="0,66 25,65 50,63 75,60 95,57 108,54 118,55 130,58 150,61 170,59 195,57 215,55 240,57 265,62 290,64 320,65 358,66"
+            fill="none" stroke="#34c759" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,3"/>
+          <text x="2" y="68" font-size="8" fill="#8e8e93">12</text>
+          <text x="2" y="48" font-size="8" fill="#8e8e93">29</text>
+          <text x="2" y="28" font-size="8" fill="#8e8e93">48</text>
+        </svg>
+        <div class="price-legend">
+          <span><span class="pleg-line" style="background:#f5a623;"></span>16 Ct/kWh Aktueller Preis</span>
+          <span><span class="pleg-line" style="background:#e05252;"></span>48 Ct/kWh Höchster Preis</span>
+          <span><span class="pleg-line" style="background:#34c759;display:block;"></span>12 Ct/kWh Niedrigster Preis</span>
+          <span style="color:var(--text2)">Ø 29 Ct/kWh</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" onclick="ctab(this)">Kosten</div>
+          <div class="ctab" onclick="ctab(this)">Ersparnis</div>
+        </div>
+        <div class="bars" id="ko-bars" style="height:80px;"></div>
+        <div class="bar-axis"><span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;">
+          <span>🟡 19 Ct Preis/kWh</span>
+          <span style="color:var(--green)">9 Ct Ersparnis/kWh</span>
+          <span>🏦 1.43 € Kosten</span>
+          <span style="color:var(--green)">⚡ 0.48 € Ersparnis</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" onclick="ctab(this)">Anlagen</div>
+          <div class="ctab" onclick="ctab(this)">Karte</div>
+        </div>
+        <div class="src-item">
+          <div class="src-row"><span>☀️ Solarenergie</span><span class="src-pct">45%</span></div>
+          <div class="src-bar"><div class="src-fill solar" style="width:45%"></div></div>
+        </div>
+        <div class="src-item">
+          <div class="src-row"><span>💨 Windenergie</span><span class="src-pct">35%</span></div>
+          <div class="src-bar"><div class="src-fill wind" style="width:35%"></div></div>
+        </div>
+        <div class="src-item">
+          <div class="src-row"><span>🏭 Sonstige</span><span class="src-pct">20%</span></div>
+          <div class="src-bar"><div class="src-fill other" style="width:20%"></div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5;">
+          Der Speicher hat den Anteil der fossilen Energien am Stromverbrauch um 12% gesenkt.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;">Services</div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;background:#f2f2f7;border-radius:12px;padding:12px;">
+            <div style="font-size:11px;color:var(--text2);">Speicher</div>
+            <div style="font-size:15px;font-weight:700;margin:2px 0;">Energized</div>
+            <span style="background:#1c1c1e;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;">Pro</span>
+            <div style="font-size:11px;color:var(--text2);margin-top:6px;">Wird fortgesetzt am 01.05.2025</div>
+          </div>
+          <div style="flex:1;background:#f2f2f7;border-radius:12px;padding:12px;">
+            <div style="font-size:11px;color:var(--text2);">Strom</div>
+            <div style="font-size:15px;font-weight:700;margin:2px 0;">Energized</div>
+            <span style="background:var(--orange);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;">Dynamic</span>
+            <div style="font-size:11px;color:var(--text2);margin-top:6px;">Wird fortgesetzt am 01.05.2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ INSIGHTS ═══════════════ -->
+    <div class="screen screen-bg" id="s-insights">
+      <div class="hdr">
+        <span class="hdr-title">Insights</span>
+        <div class="avatar"></div>
+      </div>
+
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        Entdecke deine Energiedaten
+      </div>
+
+      <div class="sec-lbl">Vorschläge</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 6px;">Verwende einen der Vorschläge oder stelle deine eigene Frage</div>
+      <div class="scroll-chips">
+        <div class="chip-card">Wie viel Strom hat meine Waschmaschine diese Woche verbraucht?</div>
+        <div class="chip-card">Wann ist die günstige Zeit um die Spülmaschine anzuschalten?</div>
+        <div class="chip-card">Welche Geräte haben die meisten Emissionen diesen Monat verursacht?</div>
+      </div>
+      <div class="more-link">Weitere Vorschläge entdecken <span>›</span></div>
+
+      <div class="sec-lbl">Empfehlungen</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 6px;">Personalisierte Ideen um Verbrauch und Kosten zu optimieren</div>
+      <div class="scroll-chips">
+        <div class="chip-card">Nutze die niedrigen Preise morgen zwischen 14:00 und 15:45 Uhr</div>
+        <div class="chip-card">Reduziere deinen Verbrauch heute zwischen 18:00 und 20:30 Uhr</div>
+      </div>
+      <div class="more-link">Weitere Empfehlungen anzeigen <span>›</span></div>
+
+      <div class="seg" style="margin-top:6px;">
+        <div class="seg-btn" onclick="seg(this)">Tage</div>
+        <div class="seg-btn active" onclick="seg(this)">Monate</div>
+        <div class="seg-btn" onclick="seg(this)">Jahr</div>
+        <div class="seg-btn" onclick="seg(this)">Individuell</div>
+      </div>
+      <div class="period-nav" style="padding:4px 16px 8px;">
+        <span class="pnav-arrow">‹</span>
+        <span>März 2025</span>
+        <span class="pnav-arrow">›</span>
+      </div>
+
+      <div class="stats3">
+        <div class="stat-box">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-val">48.2 <span class="stat-unit">kWh</span></div>
+          <div class="stat-lbl">Verbrauch</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">€</div>
+          <div class="stat-val">19.1 <span class="stat-unit">Ct/kWh</span></div>
+          <div class="stat-lbl">Preis</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-val">3.45 <span class="stat-unit">€</span></div>
+          <div class="stat-lbl">Kosten</div>
+        </div>
+      </div>
+
+      <div class="co2-row">
+        <div class="co2-card emit">
+          <div class="co2-num">9611</div>
+          <div class="co2-lbl">Gramm CO₂eq Emissionen</div>
+        </div>
+        <div class="co2-card save">
+          <div class="co2-num">3234</div>
+          <div class="co2-lbl">Gramm CO₂eq Einsparungen</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctabs">
+          <div class="ctab active" id="kat-tab" onclick="insTab('kat')">Kategorien</div>
+          <div class="ctab" id="dev-tab" onclick="insTab('dev')">Geräte</div>
+        </div>
+
+        <div id="view-kat">
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <div style="width:28px;display:flex;flex-direction:column;border-radius:8px;overflow:hidden;height:210px;flex-shrink:0;">
+              <div style="height:42%;background:#f5b8b8;"></div>
+              <div style="height:24%;background:#f5d5b0;"></div>
+              <div style="height:16%;background:#b8d9b8;"></div>
+              <div style="height:10%;background:#b0c8f5;"></div>
+              <div style="height:8%;background:#d8b8f5;"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="background:#f5b8b8;border-radius:10px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;">🫙 Haushalt</span>
+                <strong style="font-size:14px;">42%</strong>
+              </div>
+              <div style="background:#f5d5b0;border-radius:10px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;">📺 Unterhaltung</span>
+                <strong style="font-size:14px;">24%</strong>
+              </div>
+              <div style="background:#b8d9b8;border-radius:10px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;">💻 Kommunikation</span>
+                <strong style="font-size:14px;">16%</strong>
+              </div>
+              <div style="background:#b0c8f5;border-radius:10px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;">💡 Beleuchtung</span>
+                <strong style="font-size:14px;">10%</strong>
+              </div>
+              <div style="background:#d8b8f5;border-radius:10px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;">📟 Sonstiges</span>
+                <strong style="font-size:14px;">8%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-dev" style="display:none;">
+          <div class="bubble-wrap">
+            <div class="bub" style="width:90px;height:90px;background:#f5d5b0;top:20px;left:8px;"><span class="bub-icon">🫙</span><span class="bub-kwh">9.4 kWh</span></div>
+            <div class="bub" style="width:70px;height:70px;background:#b0c8f5;top:5px;left:110px;"><span class="bub-icon">💻</span><span class="bub-kwh">3.6 kWh</span></div>
+            <div class="bub" style="width:100px;height:100px;background:#f5b8b8;top:10px;right:4px;"><span class="bub-icon">❄️</span><span class="bub-kwh">12.2 kWh</span></div>
+            <div class="bub" style="width:68px;height:68px;background:#b8d9b8;bottom:25px;left:4px;"><span class="bub-icon">📺</span><span class="bub-kwh">5.9 kWh</span></div>
+            <div class="bub" style="width:82px;height:82px;background:#d8b8f5;bottom:15px;left:95px;"><span class="bub-icon">📱</span><span class="bub-kwh">7.3 kWh</span></div>
+            <div class="bub" style="width:62px;height:62px;background:#c8f0c8;bottom:18px;right:36px;"><span class="bub-icon">📱</span><span class="bub-kwh">2.2 kWh</span></div>
+            <div class="bub" style="width:54px;height:54px;background:#fff3b0;bottom:2px;right:2px;"><span class="bub-icon">💡</span><span class="bub-kwh">3.1 kWh</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 16px 6px;text-align:center;font-size:13px;color:var(--text2);">Erhalte Einblicke in Verbrauch, Kosten und Emissionen beim Klicken auf eine Geräteklasse</div>
+      <button onclick="navTo('automation')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);margin:0 16px 6px;background:#1c1c1e;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;">💡 Geräte automatisieren</button>
+      <div style="text-align:center;padding:10px 0;font-size:14px;color:var(--text2);cursor:pointer;">⬇ Insights herunterladen</div>
+    </div>
+
+    <!-- ═══════════════ AUTOMATION ═══════════════ -->
+    <div class="screen screen-bg" id="s-automation">
+      <div class="hdr">
+        <span class="hdr-title">Automation</span>
+        <div class="avatar"></div>
+      </div>
+
+      <div class="search-bar" style="margin-top:10px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 017 7c0 2.4-1.2 4.5-3 5.7V17a1 1 0 01-1 1h-6a1 1 0 01-1-1v-2.3A7 7 0 0112 2zm-2 18h4m-2 2v-2"/></svg>
+        Formuliere dein Ziel
+      </div>
+
+      <div class="sec-lbl">Vorschläge</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 6px;">Verwende einen der Vorschläge oder formuliere selbst</div>
+      <div class="scroll-chips">
+        <div class="chip-card">Ich möchte meine Waschmaschine nur zu den günstigsten Zeiten nutzen</div>
+        <div class="chip-card">Ich möchte, dass sich alle Standby Geräte 3 Stunden nach Sonnenuntergang ausschalten</div>
+        <div class="chip-card">Ich möchte alle meine Lichter ausschalten, wenn niemand mehr Zuhause ist</div>
+      </div>
+      <div class="more-link">Weitere Vorschläge entdecken <span>›</span></div>
+
+      <div class="sec-lbl">Empfehlungen</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 6px;">Automationen mit denen du richtig Geld sparen kannst</div>
+      <div class="scroll-chips">
+        <div class="chip-card">Wasche wenn Strom zu mind. 95 Prozent aus erneuerbaren Energien kommt</div>
+        <div class="chip-card">Schalte die Beleuchtung automatisch aus, sobald die letzte Person das Zuhause verlassen hat</div>
+      </div>
+      <div class="more-link">Weitere Empfehlungen entdecken <span>›</span></div>
+
+      <div class="card" style="padding:14px 0 0;">
+        <div class="ctabs" style="margin:0 14px 0;">
+          <div class="ctab active" onclick="ctab(this)">Automationen</div>
+          <div class="ctab" onclick="ctab(this)">Szenen</div>
+        </div>
+        <div class="auto-list" style="margin:8px 0 0;border-radius:0;box-shadow:none;">
+          <div class="auto-item">
+            <div class="auto-icon" style="background:#f5d5b0;">🫙</div>
+            <div class="auto-text"><div class="auto-name">Waschmaschine</div><div class="auto-desc">Schaltet die Waschmaschine zu niedrigen Preisen ein</div></div>
+            <div class="auto-chev">›</div>
+          </div>
+          <div class="auto-item">
+            <div class="auto-icon" style="background:#f5d5b0;">📺</div>
+            <div class="auto-text"><div class="auto-name">Fernseher</div><div class="auto-desc">Schaltet den Fernseher in der Nacht vollständig aus</div></div>
+            <div class="auto-chev">›</div>
+          </div>
+          <div class="auto-item">
+            <div class="auto-icon" style="background:#f5d5b0;">👔</div>
+            <div class="auto-text"><div class="auto-name">Trockner</div><div class="auto-desc">Lässt den Trockner zur Mittagszeit starten</div></div>
+            <div class="auto-chev">›</div>
+          </div>
+          <div class="auto-item">
+            <div class="auto-icon" style="background:#b0c8f5;">💡</div>
+            <div class="auto-text"><div class="auto-name">Küchenlampe</div><div class="auto-desc">Schaltet die Lampen nach dem Verlassen der Küche aus</div></div>
+            <div class="auto-chev">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="more-link" style="margin-top:-4px;">Weitere Automationen anzeigen <span>›</span></div>
+
+      <div class="card">
+        <div class="gallery-title">Galerie <span style="font-size:12px;font-weight:400;color:var(--text2);margin-left:4px;">ⓘ</span></div>
+        <div class="gallery-sub">Automationen — Geräte smarter steuern</div>
+        <div class="gallery-row">
+          <div class="gallery-chip">💡 Smarte Beleuchtung <div class="plus">+</div></div>
+          <div class="gallery-chip">📟 Standby Modus <div class="plus">+</div></div>
+        </div>
+        <div class="gallery-sub">Szenen — Kosten und Emissionen im Haushalt zu sparen</div>
+        <div class="gallery-row">
+          <div class="gallery-chip" style="background:#fffbe6;">💰 Günstig Waschen <div class="plus">+</div></div>
+          <div class="gallery-chip" style="background:#e6f7ff;">❄️ Clever Kühlen <div class="plus">+</div></div>
+        </div>
+      </div>
+
+      <button class="impact-cta" onclick="navTo('impact')">⚡ Impact anzeigen</button>
+    </div>
+
+    <!-- ═══════════════ IMPACT ═══════════════ -->
+    <div class="screen screen-bg" id="s-impact">
+      <div class="hdr">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#34c759"><path d="M17 8C8 10 5.9 16.2 3.2 21.4c-.3.6.6 1 .9.4 1.5-2.8 4.1-6.7 9.9-8.4V21l7-8-7-5v2.4z"/></svg>
+          <span class="hdr-title">Impact</span>
+        </div>
+        <div class="avatar"></div>
+      </div>
+
+      <div class="seg" style="margin-top:10px;">
+        <div class="seg-btn active" onclick="seg(this)">Tage</div>
+        <div class="seg-btn" onclick="seg(this)">Monate</div>
+        <div class="seg-btn" onclick="seg(this)">Jahr</div>
+        <div class="seg-btn" onclick="seg(this)">Individuell</div>
+      </div>
+      <div class="period-nav" style="padding:4px 16px 8px;">
+        <span class="pnav-arrow">‹</span><span>Heute</span><span class="pnav-arrow">›</span>
+      </div>
+
+      <div class="impact-hero">
+        <div class="impact-num">424</div>
+        <div class="impact-unit">Gramm CO₂eq Einsparungen</div>
+      </div>
+
+      <!-- Day chart -->
+      <div class="card" style="padding:14px 14px 10px;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:5px;height:90px;margin-bottom:6px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">623</span>
+            <div style="width:100%;flex:1;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;min-height:60px;">
+              <div style="position:absolute;bottom:0;width:100%;height:62%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">3</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">481</span>
+            <div style="width:100%;flex:1;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;min-height:46px;">
+              <div style="position:absolute;bottom:0;width:100%;height:55%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">4</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">581</span>
+            <div style="width:100%;flex:1;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;min-height:55px;">
+              <div style="position:absolute;bottom:0;width:100%;height:59%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">5</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">612</span>
+            <div style="width:100%;flex:1;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;min-height:58px;">
+              <div style="position:absolute;bottom:0;width:100%;height:63%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">6</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">311</span>
+            <div style="width:100%;flex:1;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;min-height:30px;">
+              <div style="position:absolute;bottom:0;width:100%;height:50%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">7</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">424</span>
+            <div style="width:100%;min-height:44px;background:var(--green);border-radius:4px 4px 0 0;flex:1;"></div>
+            <span style="font-size:10px;font-weight:700;background:#1c1c1e;color:#fff;border-radius:10px;padding:1px 7px;">8</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">202</span>
+            <div style="width:100%;min-height:20px;background:#e5e5ea;border-radius:4px 4px 0 0;flex:1;"></div>
+            <span style="font-size:10px;color:var(--text2);">9</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);">
+          <span>[Gramm]&nbsp;&nbsp;Tage</span><span style="color:#c7c7cc;">9 = Prognose</span>
+        </div>
+      </div>
+
+      <div class="renew-row">
+        <div class="renew-card wind">
+          <div class="renew-num">80 Prozent</div>
+          <div class="renew-lbl">Erneuerbare Energien</div>
+        </div>
+        <div class="renew-card tree">
+          <div class="renew-num">12 Prozent</div>
+          <div class="renew-lbl">Energieeinsparung</div>
+        </div>
+      </div>
+
+      <div class="period-nav" style="padding:8px 16px 6px;">
+        <span class="pnav-arrow">‹</span><span>März 2025</span><span class="pnav-arrow">›</span>
+      </div>
+      <div style="padding:0 16px 10px;">
+        <button style="background:#1c1c1e;color:#fff;border:none;border-radius:12px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;">Vergleich</button>
+      </div>
+
+      <div class="cmp-card best">
+        <span class="cmp-icon">🏁</span>
+        <div><div class="cmp-name">10% Nachhaltigsten</div><div class="cmp-val">6456 Gramm CO₂eq</div></div>
+      </div>
+      <div class="cmp-card mine">
+        <span class="cmp-icon">🏠</span>
+        <div><div class="cmp-name">Dein Zuhause</div><div class="cmp-val">6856 Gramm CO₂eq</div></div>
+      </div>
+      <div class="cmp-card comm" onclick="showOverlay()">
+        <span class="cmp-icon">👥</span>
+        <div><div class="cmp-name">Energized Community</div><div class="cmp-val">7301 Gramm CO₂eq</div></div>
+      </div>
+      <div class="cmp-card avg">
+        <span class="cmp-icon">🌍</span>
+        <div><div class="cmp-name">Durchschnitt in Deutschland</div><div class="cmp-val">8747 Gramm CO₂eq</div></div>
+      </div>
+
+      <div style="margin:8px 0 6px;">
+        <div class="seg" style="margin:0 16px;">
+          <div class="seg-btn active" onclick="seg(this)">Meilensteine</div>
+          <div class="seg-btn" onclick="seg(this)">Badges</div>
+        </div>
+      </div>
+
+      <div class="ms-card">
+        <div class="ms-icon">☀️</div>
+        <div class="ms-body"><div class="ms-title">Erneuerbare Energien nutzen</div><div class="ms-sub">> 80 Prozent EE pro Tag</div></div>
+        <div class="ms-badge g">5/8 Tage</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-icon">⚡</div>
+        <div class="ms-body"><div class="ms-title">Energie einsparen</div><div class="ms-sub">-10 Prozent ggü. Vorjahresmonat</div></div>
+        <div class="ms-badge r">-7 Prozent</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-icon">💰</div>
+        <div class="ms-body"><div class="ms-title">Kosten reduzieren</div><div class="ms-sub">< 16 Cent pro kWh</div></div>
+        <div class="ms-badge o">19.1 Cent</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-icon">🌿</div>
+        <div class="ms-body"><div class="ms-title">Emissionen minimieren</div><div class="ms-sub">< 180 Gramm CO₂eq pro kWh</div></div>
+        <div class="ms-badge r">192 g CO₂eq</div>
+      </div>
+      <div class="more-link" style="justify-content:center;">Weitere Meilensteine anzeigen <span>›</span></div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- Bottom Nav -->
+  <div class="nav">
+    <div class="nav-btn active" id="nb-zuhause" onclick="navTo('zuhause')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <span class="nav-lbl">Zuhause</span>
+    </div>
+    <div class="nav-btn" id="nb-speicher" onclick="navTo('speicher')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2"/><rect x="21" y="9" width="2" height="6" rx="1" fill="currentColor" stroke="none"/><rect x="5" y="8" width="9" height="8" rx="1.5" fill="currentColor" stroke="none"/></svg>
+      <span class="nav-lbl">Speicher</span>
+    </div>
+    <div class="nav-btn" id="nb-insights" onclick="navTo('insights')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-lbl">Insights</span>
+    </div>
+    <div class="nav-btn" id="nb-automation" onclick="navTo('automation')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 017 7c0 2.8-1.6 5.2-4 6.4V17a1 1 0 01-1 1h-4a1 1 0 01-1-1v-1.6C6.6 14.2 5 11.8 5 9a7 7 0 017-7zm-2 19h4m-2 1v-1"/><circle cx="12" cy="9" r="1.5" fill="currentColor" stroke="none"/></svg>
+      <span class="nav-lbl">Automation</span>
+    </div>
+    <div class="nav-btn" id="nb-impact" onclick="navTo('impact')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 8C8 10 5.9 16.2 3.2 21.4c-.3.6.6 1 .9.4 1.5-2.8 4.1-6.7 9.9-8.4V21l7-8-7-5v2.4z"/></svg>
+      <span class="nav-lbl">Impact</span>
+    </div>
+  </div>
+
+  <!-- Community Overlay -->
+  <div class="overlay" id="overlay" onclick="closeOverlay(event)">
+    <div class="ov-sheet">
+      <div class="ov-handle"></div>
+      <div style="padding:0 0 4px;">
+        <div class="ov-hero">
+          <div class="ov-num">1293 t CO₂eq</div>
+          <div class="ov-text">konnten bisher im März 2025 durch die Energized Community eingespart werden</div>
+        </div>
+        <div class="ov-body">
+          <p>Als Energized Community unterstützen wir mit unserem Cloud-Energiespeicher die maximale Nutzung erneuerbarer Energien. Solar- und Windenergie unterliegen natürlichen Schwankungen – doch mit intelligenten, vernetzten Speichern kann überschüssiger Strom gespeichert und genau dann genutzt werden, wenn er benötigt wird.</p>
+          <p>Der Cloud-Energiespeicher lädt genau dann, wenn günstige erneuerbare Energie verfügbar ist – sei es durch eine hohe Sonneneinstrahlung am Mittag oder starken Wind in der Nacht.</p>
+        </div>
+        <div style="margin:0 16px 12px;background:#f9f9f9;border-radius:12px;padding:12px;">
+          <svg viewBox="0 0 320 80" width="100%" height="70">
+            <rect x="0"  y="36" width="8" height="22" fill="#34c759" rx="1.5"/>
+            <rect x="12" y="26" width="8" height="32" fill="#34c759" rx="1.5"/>
+            <rect x="24" y="16" width="8" height="42" fill="#34c759" rx="1.5"/>
+            <rect x="36" y="10" width="8" height="48" fill="#34c759" rx="1.5"/>
+            <rect x="48" y="6"  width="8" height="52" fill="#34c759" rx="1.5"/>
+            <rect x="60" y="2"  width="8" height="56" fill="#34c759" rx="1.5"/>
+            <rect x="72" y="8"  width="8" height="50" fill="#34c759" rx="1.5"/>
+            <rect x="84" y="52" width="8" height="6"  fill="#34c759" rx="1.5"/>
+            <rect x="96" y="46" width="8" height="22" fill="#e05252" rx="1.5"/>
+            <rect x="108" y="38" width="8" height="30" fill="#e05252" rx="1.5"/>
+            <rect x="120" y="28" width="8" height="40" fill="#e05252" rx="1.5"/>
+            <rect x="132" y="24" width="8" height="44" fill="#e05252" rx="1.5"/>
+            <rect x="144" y="22" width="8" height="46" fill="#e05252" rx="1.5"/>
+            <line x1="0" y1="72" x2="320" y2="72" stroke="#e5e5ea"/>
+            <text x="2"   y="79" font-size="8" fill="#8e8e93">02</text>
+            <text x="62"  y="79" font-size="8" fill="#8e8e93">10</text>
+            <text x="122" y="79" font-size="8" fill="#8e8e93">16</text>
+            <text x="182" y="79" font-size="8" fill="#8e8e93">20</text>
+          </svg>
+          <div style="display:flex;gap:14px;font-size:11px;color:var(--text2);margin-top:4px;">
+            <span><span style="display:inline-block;width:10px;height:3px;background:var(--green);border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Speicher laden</span>
+            <span><span style="display:inline-block;width:10px;height:3px;background:var(--red);border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Speicher entladen</span>
+          </div>
+        </div>
+        <div class="ov-body">
+          <p>Mit dem Cloud-Energiespeicher steigerst du den Anteil erneuerbarer Energien in deinem Strommix und reduzierst die Emissionen für deinen Stromverbrauch.</p>
+        </div>
+        <div class="ov-savings">
+          <div class="ov-sav-card" style="display:flex;align-items:center;justify-content:center;">
+            <div>
+              <div style="font-size:12px;opacity:.8;margin-bottom:4px;">Deine Einsparungen 2025</div>
+            </div>
+          </div>
+          <div class="ov-sav-card">
+            <div class="ov-sav-num">30.8</div>
+            <div class="ov-sav-lbl">Kilogramm CO₂eq</div>
+          </div>
+        </div>
+        <div class="ov-share">Jetzt mit Freunden teilen ↑</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+// ── Bar data ──
+const barDataLade = [60,100,200,330,550,850,1300,1600,1400,950,500,250,120,60,25,
+  -90,-200,-420,-720,-950,-830,-620,-390,-160];
+const barDataKosten = [3,5,10,18,28,38,48,56,50,40,28,18,10,6,3,
+  2,2,3,4,6,5,4,3,2];
+
+function buildBars(id, data, h) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const max = Math.max(...data.map(Math.abs));
+  el.innerHTML = '';
+  el.style.cssText += `;height:${h||120}px;display:flex;align-items:center;gap:2px;`;
+  data.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar ' + (v >= 0 ? 'up' : 'dn');
+    const pct = Math.max(2, Math.abs(v) / max * ((h||120)/2 - 4));
+    b.style.height = pct + 'px';
+    b.style.flex = '1';
+    el.appendChild(b);
+  });
+}
+buildBars('zh-bars', barDataLade, 120);
+buildBars('sp-bars', barDataLade, 120);
+buildBars('ko-bars', barDataKosten, 80);
+
+// ── Navigation ──
+const tabs = ['zuhause','speicher','insights','automation','impact'];
+function navTo(id) {
+  tabs.forEach(t => {
+    document.getElementById('s-'+t).classList.remove('active');
+    document.getElementById('nb-'+t).classList.remove('active');
+  });
+  document.getElementById('s-'+id).classList.add('active');
+  document.getElementById('nb-'+id).classList.add('active');
+  document.getElementById('mainscroll').scrollTop = 0;
+}
+
+// ── Segment / day tab helpers ──
+function seg(el) {
+  el.closest('.seg').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function dayTab(i, el) {
+  el.closest('.day-tabs').querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function ctab(el) {
+  el.closest('.ctabs').querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Insights tab ──
+function insTab(v) {
+  document.getElementById('view-kat').style.display = v==='kat' ? '' : 'none';
+  document.getElementById('view-dev').style.display = v==='dev' ? '' : 'none';
+  document.getElementById('kat-tab').classList.toggle('active', v==='kat');
+  document.getElementById('dev-tab').classList.toggle('active', v==='dev');
+}
+
+// ── Overlay ──
+function showOverlay() { document.getElementById('overlay').classList.add('show'); }
+function closeOverlay(e) { if (e.target===document.getElementById('overlay')) document.getElementById('overlay').classList.remove('show'); }
+</script>
 </body>
 </html>

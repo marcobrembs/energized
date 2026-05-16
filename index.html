@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energized – Interaktiver Prototyp</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    overflow: hidden;
+  }
+  /* iPad landscape hint */
+  body::before {
+    content: 'Drehe das iPad für beste Ansicht';
+    display: none;
+  }
+
+  /* ── iPhone shell ── */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 50px;
+    box-shadow: 0 0 0 14px #1c1c1e, 0 40px 80px rgba(0,0,0,.6);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  /* notch */
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 37px;
+    background: #1c1c1e;
+    border-radius: 0 0 22px 22px;
+    z-index: 200;
+  }
+  /* status bar */
+  .status-bar {
+    height: 50px;
+    background: #fff;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-size: 15px; font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .status-bar .icons span { font-size: 12px; }
+
+  /* ── Scrollable content ── */
+  .screen-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen-wrap::-webkit-scrollbar { display: none; }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    height: 83px;
+    background: #fff;
+    border-top: 1px solid #e5e5ea;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .nav-item:active { opacity: .6; }
+  .nav-icon { font-size: 22px; line-height: 1; }
+  .nav-label { font-size: 10px; color: #8e8e93; }
+  .nav-item.active .nav-label { color: #34c759; }
+  .nav-item.active .nav-icon { filter: none; }
+  .nav-icon svg { width: 24px; height: 24px; }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Common components ── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8e8e93;
+    padding: 14px 16px 6px;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    margin: 0 16px 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .chip-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 12px;
+  }
+  .chip {
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1.5px solid #e5e5ea;
+    background: #fff;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .chip.active {
+    background: #1c1c1e;
+    color: #fff;
+    border-color: #1c1c1e;
+  }
+  .chip.pill {
+    border-radius: 20px;
+  }
+
+  /* ── COLOURS ── */
+  :root {
+    --green: #34c759;
+    --green-dark: #228b3b;
+    --red: #e05252;
+    --orange: #ff9500;
+    --yellow: #ffd60a;
+    --blue: #007aff;
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --text: #1c1c1e;
+    --text2: #8e8e93;
+  }
+
+  /* ════════════════════════════
+     SCREEN 1 – ZUHAUSE
+  ════════════════════════════ */
+  #zuhause { background: var(--bg); padding-bottom: 16px; }
+
+  .zh-header {
+    background: #fff;
+    padding: 12px 16px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .zh-header-left { display: flex; flex-direction: column; gap: 4px; }
+  .zh-loc { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .zh-meta { display: flex; gap: 14px; font-size: 13px; color: var(--text2); }
+  .zh-meta span { display: flex; align-items: center; gap: 4px; }
+  .avatar { width: 42px; height: 42px; border-radius: 21px; background: linear-gradient(135deg, #f5a623, #e8775a); }
+
+  /* Energy flow */
+  .flow-card {
+    background: #fff;
+    margin: 10px 16px;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+    align-items: center;
+    text-align: center;
+  }
+  .flow-node { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .flow-icon { font-size: 26px; }
+  .flow-kw { font-size: 22px; font-weight: 700; }
+  .flow-kw.green { color: var(--green); }
+  .flow-kw.red { color: var(--red); }
+  .flow-label { font-size: 12px; color: var(--text2); }
+  .flow-arrow { font-size: 22px; color: var(--green); text-align: center; }
+  .flow-arrow.down { color: var(--green); }
+  .mini-chart { height: 60px; position: relative; overflow: hidden; }
+  .mini-chart canvas { width: 100%; height: 100%; }
+
+  /* Day tabs */
+  .day-tabs {
+    display: flex;
+    background: #fff;
+    margin: 10px 16px;
+    border-radius: 12px;
+    border: 1.5px solid #e5e5ea;
+    overflow: hidden;
+  }
+  .day-tab {
+    flex: 1;
+    padding: 9px 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--text2);
+  }
+  .day-tab.active {
+    background: #1c1c1e;
+    color: #fff;
+    border-radius: 10px;
+    margin: 2px;
+  }
+  .day-tab small { display: block; font-size: 10px; opacity: .7; }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    margin: 0 16px 10px;
+  }
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 10px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .stat-icon { font-size: 18px; margin-bottom: 4px; }
+  .stat-val { font-size: 17px; font-weight: 700; }
+  .stat-unit { font-size: 11px; color: var(--text2); }
+  .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* CO2 banners */
+  .co2-row {
+    display: flex;
+    gap: 10px;
+    margin: 0 16px 10px;
+  }
+  .co2-card {
+    flex: 1;
+    border-radius: 14px;
+    height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+  }
+  .co2-card.emit { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+  .co2-card.save { background: linear-gradient(135deg, #1e6b2e, #27ae60); }
+  .co2-num { font-size: 26px; font-weight: 800; }
+  .co2-label { font-size: 11px; opacity: .9; }
+
+  /* Chart section */
+  .chart-section {
+    background: #fff;
+    margin: 0 16px 10px;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .chart-tabs {
+    display: flex;
+    background: #f2f2f7;
+    border-radius: 10px;
+    padding: 2px;
+    margin-bottom: 12px;
+  }
+  .chart-tab {
+    flex: 1;
+    text-align: center;
+    padding: 7px 0;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 9px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all .2s;
+  }
+  .chart-tab.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+
+  .bar-chart {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0 4px;
+  }
+  .bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-width: 6px;
+    transition: height .3s;
+  }
+  .bar.pos { background: var(--green); }
+  .bar.neg { background: var(--red); border-radius: 0 0 3px 3px; align-self: flex-start; margin-top: auto; }
+  .bar-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text2);
+    margin-top: 4px;
+    padding: 0 4px;
+  }
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  /* ════════════════════════════
+     SCREEN 2 – SPEICHER
+  ════════════════════════════ */
+  #speicher { background: var(--bg); padding-bottom: 16px; }
+
+  .screen-header {
+    background: #fff;
+    padding: 14px 16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f2f2f7;
+  }
+  .screen-title { font-size: 22px; font-weight: 700; }
+
+  .period-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #fff;
+  }
+  .period-nav span { font-size: 16px; font-weight: 600; }
+  .nav-arrow { font-size: 20px; color: var(--text2); cursor: pointer; padding: 0 8px; }
+
+  .status-btn-row {
+    padding: 8px 16px;
+    display: flex;
+    gap: 10px;
+  }
+  .status-btn {
+    flex: 1;
+    background: #1c1c1e;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+  .info-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e5ea;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text2);
+  }
+
+  /* Battery status cards */
+  .battery-row {
+    display: flex;
+    gap: 8px;
+    margin: 0 16px 12px;
+  }
+  .battery-card {
+    flex: 1;
+    border-radius: 14px;
+    padding: 14px 12px;
+  }
+  .battery-card.avail { background: #e8b4a8; }
+  .battery-card.disch { background: #f5d8d2; }
+  .battery-kwh { font-size: 20px; font-weight: 700; }
+  .battery-pct { font-size: 15px; font-weight: 600; }
+  .battery-label { font-size: 12px; color: #666; margin-top: 2px; }
+
+  /* Strompreis chart */
+  .price-chart {
+    height: 90px;
+    position: relative;
+    margin: 8px 0 4px;
+  }
+  .price-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .price-legend span { display: flex; align-items: center; gap: 4px; }
+
+  /* Source breakdown */
+  .source-bar {
+    height: 10px;
+    border-radius: 5px;
+    background: #e5e5ea;
+    overflow: hidden;
+    margin: 8px 0 4px;
+    display: flex;
+  }
+  .source-bar .fill { height: 100%; }
+  .source-bar .solar { background: #ffd60a; }
+  .source-bar .wind { background: var(--blue); }
+  .source-bar .other { background: #e5e5ea; }
+  .source-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 4px;
+    color: var(--text2);
+  }
+
+  /* ════════════════════════════
+     SCREEN 3 – INSIGHTS
+  ════════════════════════════ */
+  #insights { background: var(--bg); padding-bottom: 16px; }
+
+  .search-bar {
+    margin: 10px 16px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: var(--text2);
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+
+  .suggest-cards {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 4px;
+    overflow-x: auto;
+  }
+  .suggest-cards::-webkit-scrollbar { display: none; }
+  .suggest-card {
+    flex-shrink: 0;
+    width: 160px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text2);
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    line-height: 1.4;
+  }
+
+  .rec-cards {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 4px;
+    overflow-x: auto;
+  }
+  .rec-cards::-webkit-scrollbar { display: none; }
+  .rec-card {
+    flex-shrink: 0;
+    width: 150px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    line-height: 1.4;
+  }
+
+  /* Category bars */
+  .cat-row {
+    display: flex;
+    gap: 10px;
+    margin: 4px 0;
+    align-items: center;
+  }
+  .cat-label { width: 80px; font-size: 12px; color: var(--text2); }
+  .cat-bar-wrap { flex: 1; height: 36px; border-radius: 10px; overflow: hidden; display: flex; align-items: center; padding: 0 12px; }
+  .cat-pct { font-size: 14px; font-weight: 700; color: #fff; }
+
+  /* Device bubbles */
+  .bubble-area {
+    position: relative;
+    height: 260px;
+    margin: 0 8px;
+  }
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  .bubble:active { transform: scale(.95); }
+  .bubble .b-icon { font-size: 18px; }
+  .bubble .b-kwh { font-size: 12px; font-weight: 700; }
+
+  /* ════════════════════════════
+     SCREEN 4 – AUTOMATION
+  ════════════════════════════ */
+  #automation { background: var(--bg); padding-bottom: 16px; }
+
+  .auto-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border-bottom: 1px solid #f2f2f7;
+    cursor: pointer;
+  }
+  .auto-item:active { background: #f2f2f7; }
+  .auto-icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .auto-text { flex: 1; }
+  .auto-name { font-size: 16px; font-weight: 600; }
+  .auto-desc { font-size: 13px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
+  .auto-chevron { color: var(--text2); font-size: 18px; }
+
+  .gallery-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 12px;
+  }
+  .gallery-chip {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    cursor: pointer;
+  }
+  .gallery-chip .plus { color: var(--text2); }
+
+  .impact-btn {
+    margin: 12px 16px;
+    background: #1c1c1e;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 15px 0;
+    width: calc(100% - 32px);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ════════════════════════════
+     SCREEN 5 – IMPACT
+  ════════════════════════════ */
+  #impact { background: var(--bg); padding-bottom: 16px; }
+
+  .impact-hero {
+    background: linear-gradient(170deg, #1e6b2e 0%, #2d5a1b 60%, #1a3a0f 100%);
+    margin: 10px 16px;
+    border-radius: 18px;
+    padding: 28px 20px 24px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .impact-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Cellipse cx='100' cy='80' rx='120' ry='60' fill='%2327ae60' opacity='.3'/%3E%3C/svg%3E") bottom/cover no-repeat;
+  }
+  .impact-num { font-size: 52px; font-weight: 900; position: relative; }
+  .impact-unit { font-size: 16px; font-weight: 600; opacity: .9; position: relative; }
+
+  .impact-days {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    height: 100px;
+    margin: 12px 0 4px;
+  }
+  .impact-day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .impact-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: #c8e6c9;
+    position: relative;
+    overflow: hidden;
+  }
+  .impact-bar .fill { background: var(--green); border-radius: 4px 4px 0 0; }
+  .impact-day-label { font-size: 11px; color: var(--text2); }
+  .impact-day-num { font-size: 11px; color: var(--text2); }
+
+  .compare-section { margin: 10px 16px 12px; }
+  .compare-card {
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid transparent;
+  }
+  .compare-card.best { background: #d4edda; border-color: #27ae60; }
+  .compare-card.mine { background: #fff; border-color: #e5e5ea; }
+  .compare-card.community { background: #fff5e6; border-color: #ff9500; }
+  .compare-card.avg { background: #fdecea; border-color: var(--red); }
+  .compare-icon { font-size: 20px; }
+  .compare-text { flex: 1; padding: 0 10px; }
+  .compare-name { font-size: 13px; font-weight: 600; }
+  .compare-val { font-size: 12px; color: var(--text2); }
+
+  /* Milestones */
+  .milestone {
+    background: #fff;
+    border-radius: 14px;
+    margin: 0 16px 8px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .ms-icon { font-size: 26px; }
+  .ms-text { flex: 1; }
+  .ms-title { font-size: 14px; font-weight: 600; }
+  .ms-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .ms-badge { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 8px; }
+  .ms-badge.green { background: #d4edda; color: var(--green-dark); }
+  .ms-badge.red { background: #fdecea; color: var(--red); }
+  .ms-badge.orange { background: #fff5e6; color: var(--orange); }
+
+  /* ════════════════════════════
+     OVERLAY – Community
+  ════════════════════════════ */
+  .overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0,0,0,.5);
+    align-items: flex-end;
+  }
+  .overlay.show { display: flex; }
+  .overlay-sheet {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-height: 85%;
+    overflow-y: auto;
+    padding-bottom: 30px;
+  }
+  .overlay-sheet::-webkit-scrollbar { display: none; }
+  .overlay-handle {
+    width: 40px; height: 4px;
+    background: #e5e5ea;
+    border-radius: 2px;
+    margin: 12px auto 8px;
+  }
+  .overlay-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text2);
+  }
+  .overlay-hero {
+    background: linear-gradient(170deg, #1e6b2e, #2d5a1b);
+    margin: 0 16px 12px;
+    border-radius: 16px;
+    padding: 22px 18px;
+    color: #fff;
+    text-align: center;
+  }
+  .overlay-hero-num { font-size: 38px; font-weight: 900; }
+  .overlay-hero-unit { font-size: 14px; opacity: .9; }
+  .overlay-hero-text { font-size: 13px; opacity: .85; margin-top: 4px; }
+  .overlay-body { padding: 0 16px; font-size: 14px; line-height: 1.6; color: #333; }
+  .overlay-body p { margin-bottom: 12px; }
+
+  /* SVG Charts */
+  svg.chart { width: 100%; overflow: visible; }
+
+  /* Renewable banners */
+  .renew-row {
+    display: flex;
+    gap: 10px;
+    margin: 0 16px 12px;
+  }
+  .renew-card {
+    flex: 1;
+    border-radius: 14px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 12px;
+    color: #fff;
+    font-weight: 700;
+  }
+  .renew-card.wind { background: linear-gradient(135deg, #4a6fa5, #2c4a7c); }
+  .renew-card.tree { background: linear-gradient(135deg, #2d8e4e, #1a5c2e); }
+  .renew-num { font-size: 22px; }
+  .renew-label { font-size: 11px; opacity: .9; font-weight: 400; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="time">14:01</span>
+    <div class="icons">
+      <span>📶</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="screen-wrap">
+
+    <!-- ══════════════════════════════
+         SCREEN 1: ZUHAUSE
+    ══════════════════════════════ -->
+    <div class="screen active" id="zuhause">
+      <!-- Header -->
+      <div class="zh-header">
+        <div class="zh-header-left">
+          <div class="zh-loc">📍 Würzburg</div>
+          <div class="zh-meta">
+            <span>🟡 16 Cent/kWh</span>
+            <span>🟢 52g CO₂eq/kWh</span>
+          </div>
+        </div>
+        <div class="avatar"></div>
+      </div>
+
+      <!-- Energy flow -->
+      <div class="flow-card">
+        <div class="flow-grid">
+          <!-- Row 1: Stromnetz → Haushalt -->
+          <div class="flow-node">
+            <div class="flow-icon">⚡</div>
+            <div class="flow-kw red">2.1 kW</div>
+            <div class="flow-label">Stromnetz</div>
+          </div>
+          <div class="flow-arrow">➤</div>
+          <div class="flow-node">
+            <div class="flow-icon">🏠</div>
+            <div class="flow-kw green">0.6 kW</div>
+            <div class="flow-label">Haushalt</div>
+          </div>
+
+          <!-- Row 2: down arrow -->
+          <div style="text-align:center; font-size:22px; color:var(--green);">⬇</div>
+          <div></div>
+          <div style="border-left:2px dashed #e5e5ea; height:40px; margin:0 auto;"></div>
+
+          <!-- Row 3: Speicher + mini chart -->
+          <div class="flow-node">
+            <div class="flow-icon">🔋</div>
+            <div class="flow-kw green">1.5 kW</div>
+            <div class="flow-label">Speicher</div>
+          </div>
+          <div></div>
+          <div style="height:50px;">
+            <svg viewBox="0 0 120 50" class="chart">
+              <!-- mini bar chart preview -->
+              <rect x="2" y="20" width="6" height="20" fill="#34c759" rx="2"/>
+              <rect x="10" y="15" width="6" height="25" fill="#34c759" rx="2"/>
+              <rect x="18" y="10" width="6" height="30" fill="#34c759" rx="2"/>
+              <rect x="26" y="22" width="6" height="18" fill="#34c759" rx="2"/>
+              <rect x="34" y="8" width="6" height="32" fill="#34c759" rx="2"/>
+              <rect x="42" y="5" width="6" height="35" fill="#34c759" rx="2"/>
+              <rect x="50" y="12" width="6" height="28" fill="#34c759" rx="2"/>
+              <rect x="58" y="25" width="6" height="5" fill="#34c759" rx="2"/>
+              <rect x="66" y="28" width="6" height="12" fill="#e05252" rx="2" transform="translate(0 10)"/>
+              <rect x="74" y="25" width="6" height="20" fill="#e05252" rx="2" transform="translate(0 5)"/>
+              <rect x="82" y="20" width="6" height="28" fill="#e05252" rx="2" transform="translate(0 2)"/>
+              <rect x="90" y="18" width="6" height="32" fill="#e05252" rx="2"/>
+              <line x1="60" y1="0" x2="60" y2="50" stroke="#aaa" stroke-width=".8" stroke-dasharray="3,2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Day tabs -->
+      <div class="day-tabs" style="margin:10px 16px;">
+        <div class="day-tab" onclick="dayTab(0)">Gestern</div>
+        <div class="day-tab active" id="daytab-1" onclick="dayTab(1)">Heute</div>
+        <div class="day-tab" onclick="dayTab(2)">Morgen<small>Prognose</small></div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-val">7.5 <span class="stat-unit">kWh</span></div>
+          <div class="stat-label">Verbrauch</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">€</div>
+          <div class="stat-val">24.2 <span class="stat-unit">Ct/kWh</span></div>
+          <div class="stat-label">Preis</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-val">1.82 <span class="stat-unit">€</span></div>
+          <div class="stat-label">Kosten</div>
+        </div>
+      </div>
+
+      <!-- CO2 banners -->
+      <div class="co2-row">
+        <div class="co2-card emit">
+          <div class="co2-num">1177</div>
+          <div class="co2-label">Gramm CO₂eq<br>Emissionen</div>
+        </div>
+        <div class="co2-card save">
+          <div class="co2-num">424</div>
+          <div class="co2-label">Gramm CO₂eq<br>Einsparungen</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="chartTab(0,'zh')">Ladeverhalten</div>
+          <div class="chart-tab" onclick="chartTab(1,'zh')">Verbrauch</div>
+        </div>
+        <div class="bar-chart" id="zh-chart">
+          <!-- Generated bars -->
+        </div>
+        <div class="bar-axis">
+          <span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span>
+        </div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--green)"></span>5.5 kWh Speicherladung</span>
+          <span><span class="legend-dot" style="background:var(--red)"></span>1.1 kWh Speicherentladung</span>
+        </div>
+      </div>
+    </div><!-- /zuhause -->
+
+
+    <!-- ══════════════════════════════
+         SCREEN 2: SPEICHER
+    ══════════════════════════════ -->
+    <div class="screen" id="speicher">
+      <div class="screen-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">🔋</span>
+          <span class="screen-title">Speicher</span>
+        </div>
+        <div class="avatar"></div>
+      </div>
+
+      <!-- Period tabs -->
+      <div class="chip-row" style="padding:10px 16px 6px;">
+        <div class="chip pill active" onclick="periodTab(this)">Tage</div>
+        <div class="chip pill" onclick="periodTab(this)">Monate</div>
+        <div class="chip pill" onclick="periodTab(this)">Jahr</div>
+        <div class="chip pill" onclick="periodTab(this)">Individuell</div>
+      </div>
+
+      <div class="period-nav">
+        <span class="nav-arrow">‹</span>
+        <span>Heute</span>
+        <span class="nav-arrow">›</span>
+      </div>
+
+      <div class="status-btn-row">
+        <div class="status-btn">Status</div>
+        <div class="info-btn">ⓘ</div>
+      </div>
+
+      <!-- Battery cards -->
+      <div class="battery-row">
+        <div class="battery-card avail">
+          <div class="battery-kwh">5.4 kWh</div>
+          <div class="battery-pct">83.1 %</div>
+          <div class="battery-label">Verfügbar</div>
+        </div>
+        <div class="battery-card disch">
+          <div class="battery-kwh">1.1 kWh</div>
+          <div class="battery-pct">16.9 %</div>
+          <div class="battery-label">Entladen</div>
+        </div>
+      </div>
+
+      <!-- Ladeverhalten / Verbrauch -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="chartTab(0,'sp')">Ladeverhalten</div>
+          <div class="chart-tab" onclick="chartTab(1,'sp')">Verbrauch</div>
+        </div>
+        <div class="bar-chart" id="sp-chart"></div>
+        <div class="bar-axis">
+          <span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span>
+        </div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--green)"></span>5.5 kWh Speicherladung</span>
+          <span><span class="legend-dot" style="background:var(--red)"></span>1.1 kWh Speicherentladung</span>
+        </div>
+      </div>
+
+      <!-- Strompreis chart -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="chartTab(0,'preis')">Strompreis</div>
+          <div class="chart-tab" onclick="chartTab(1,'preis')">Emissionen</div>
+        </div>
+        <svg viewBox="0 0 340 80" class="chart" style="margin:8px 0;">
+          <!-- Price line chart approximation -->
+          <polyline points="0,60 30,55 60,50 80,30 100,20 110,8 120,25 140,45 160,50 180,55 200,52 220,48 240,42 260,55 280,60 310,58 340,56"
+            fill="none" stroke="#e05252" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="0,70 30,68 60,65 80,60 100,55 120,52 140,55 160,60 180,58 200,56 220,54 240,56 260,60 280,62 310,64 340,65"
+            fill="none" stroke="#34c759" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4,3"/>
+          <line x1="0" y1="75" x2="340" y2="75" stroke="#e5e5ea" stroke-width=".5"/>
+        </svg>
+        <div class="price-legend">
+          <span><span class="legend-dot" style="background:#ffd60a;border-radius:2px;width:12px;height:3px;"></span>16 Cent/kWh Aktueller Preis</span>
+          <span><span class="legend-dot" style="background:#e05252;border-radius:2px;width:12px;height:3px;"></span>48 Cent/kWh Höchster Preis</span>
+          <span><span class="legend-dot" style="background:#34c759;border-radius:2px;width:12px;height:3px;"></span>12 Cent/kWh Niedrigster Preis</span>
+          <span style="color:var(--text2)">Ø 29 Cent/kWh</span>
+        </div>
+      </div>
+
+      <!-- Kosten / Ersparnis -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="chartTab(0,'kosten')">Kosten</div>
+          <div class="chart-tab" onclick="chartTab(1,'kosten')">Ersparnis</div>
+        </div>
+        <div class="bar-chart" id="kosten-chart" style="height:80px;"></div>
+        <div class="bar-axis">
+          <span>02</span><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;flex-wrap:wrap;">
+          <span>🟡 19 Cent Preis pro kWh</span>
+          <span>🟢 9 Cent Ersparnis pro kWh</span>
+          <span>🏦 1.43 Euro Kosten</span>
+          <span>⚡ 0.48 Euro Ersparnis</span>
+        </div>
+      </div>
+
+      <!-- Energy sources -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="chartTab(0,'anlage')">Anlagen</div>
+          <div class="chart-tab" onclick="chartTab(1,'anlage')">Karte</div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+            <span>☀️ Solar</span><span style="font-weight:600;">45%</span>
+          </div>
+          <div class="source-bar"><div class="fill solar" style="width:45%;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin:8px 0 6px;">
+            <span>💨 Wind</span><span style="font-weight:600;">35%</span>
+          </div>
+          <div class="source-bar"><div class="fill wind" style="width:35%;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin:8px 0 6px;">
+            <span>🏭 Sonstige</span><span style="font-weight:600;">20%</span>
+          </div>
+          <div class="source-bar"><div class="fill" style="width:20%;background:#999;"></div></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:12px;font-size:12px;color:var(--text2);">
+          <span>CO₂ 1.43 Euro Emissionen</span>
+          <span>⚡ 0.48 Euro Einsparungen</span>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text2);line-height:1.5;">
+          Der Speicher hat den Anteil der fossilen Energien am Stromverbrauch um 12% gesenkt.
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;">Services</div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:#f2f2f7;border-radius:12px;padding:12px;">
+            <div style="font-size:12px;color:var(--text2);">Speicher</div>
+            <div style="font-size:15px;font-weight:700;">Energized</div>
+            <div style="background:#1c1c1e;color:#fff;border-radius:6px;font-size:11px;padding:2px 7px;display:inline-block;margin-top:4px;">Pro</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px;">Wird fortgesetzt am 01.05.2025</div>
+          </div>
+          <div style="flex:1;background:#f2f2f7;border-radius:12px;padding:12px;">
+            <div style="font-size:12px;color:var(--text2);">Strom</div>
+            <div style="font-size:15px;font-weight:700;">Energized</div>
+            <div style="background:var(--orange);color:#fff;border-radius:6px;font-size:11px;padding:2px 7px;display:inline-block;margin-top:4px;">Dynamic</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px;">Wird fortgesetzt am 01.05.2025</div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /speicher -->
+
+
+    <!-- ══════════════════════════════
+         SCREEN 3: INSIGHTS
+    ══════════════════════════════ -->
+    <div class="screen" id="insights">
+      <div class="screen-header">
+        <span class="screen-title">Insights</span>
+        <div class="avatar"></div>
+      </div>
+
+      <div class="search-bar">
+        <span>🔍</span>
+        <span>Entdecke deine Energiedaten</span>
+      </div>
+
+      <div class="section-title">Vorschläge</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 8px;">Verwende einen der Vorschläge oder stelle deine eigene Frage</div>
+      <div class="suggest-cards">
+        <div class="suggest-card">Wie viel Strom hat meine Waschmaschine diese Woche verbraucht?</div>
+        <div class="suggest-card">Wann ist die günstige Zeit um die Spülmaschine anzuschalten?</div>
+        <div class="suggest-card">Welche Geräte haben die meisten Emissionen diesen Monat verursacht?</div>
+      </div>
+      <div style="padding:8px 16px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        Weitere Vorschläge entdecken <span>›</span>
+      </div>
+
+      <div class="section-title">Empfehlungen</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 8px;">Personalisierte Ideen um Verbrauch und Kosten zu optimieren</div>
+      <div class="rec-cards">
+        <div class="rec-card">Nutze die niedrigen Preise morgen zwischen 14:00 und 15:45 Uhr</div>
+        <div class="rec-card">Reduziere deinen Verbrauch heute zwischen 18:00 und 20:30 Uhr</div>
+      </div>
+      <div style="padding:8px 16px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        Weitere Empfehlungen anzeigen <span>›</span>
+      </div>
+
+      <!-- Period tabs -->
+      <div class="chip-row">
+        <div class="chip pill" onclick="periodTab(this)">Tage</div>
+        <div class="chip pill active" onclick="periodTab(this)">Monate</div>
+        <div class="chip pill" onclick="periodTab(this)">Jahr</div>
+        <div class="chip pill" onclick="periodTab(this)">Individuell</div>
+      </div>
+      <div class="period-nav" style="padding:4px 16px 10px;">
+        <span class="nav-arrow">‹</span>
+        <span>März 2025</span>
+        <span class="nav-arrow">›</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-val">48.2 <span class="stat-unit">kWh</span></div>
+          <div class="stat-label">Verbrauch</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">€</div>
+          <div class="stat-val">19.1 <span class="stat-unit">Ct/kWh</span></div>
+          <div class="stat-label">Preis</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-val">3.45 <span class="stat-unit">€</span></div>
+          <div class="stat-label">Kosten</div>
+        </div>
+      </div>
+
+      <!-- CO2 -->
+      <div class="co2-row">
+        <div class="co2-card emit">
+          <div class="co2-num">9611</div>
+          <div class="co2-label">Gramm CO₂eq Emissionen</div>
+        </div>
+        <div class="co2-card save">
+          <div class="co2-num">3234</div>
+          <div class="co2-label">Gramm CO₂eq Einsparungen</div>
+        </div>
+      </div>
+
+      <!-- Kategorien / Geräte -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <div class="chart-tab active" id="ins-kat-tab" onclick="insightsTab('kategorien')">Kategorien</div>
+          <div class="chart-tab" id="ins-dev-tab" onclick="insightsTab('geraete')">Geräte</div>
+        </div>
+
+        <!-- Kategorien view -->
+        <div id="ins-kategorien">
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <!-- Left: stacked bar -->
+            <div style="width:60px;display:flex;flex-direction:column;border-radius:8px;overflow:hidden;height:160px;">
+              <div style="height:42%;background:#ffb3ba;"></div>
+              <div style="height:24%;background:#ffd4a3;"></div>
+              <div style="height:16%;background:#b3d9b3;"></div>
+              <div style="height:10%;background:#b3d4ff;"></div>
+              <div style="height:8%;background:#e8b3ff;"></div>
+            </div>
+            <!-- Right: labels -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;">
+              <div style="background:#ffb3ba;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <span>🫙 Haushalt</span><strong>42%</strong>
+              </div>
+              <div style="background:#ffd4a3;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <span>📺 Unterhaltung</span><strong>24%</strong>
+              </div>
+              <div style="background:#b3d9b3;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <span>💻 Kommunikation</span><strong>16%</strong>
+              </div>
+              <div style="background:#b3d4ff;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <span>💡 Beleuchtung</span><strong>10%</strong>
+              </div>
+              <div style="background:#e8b3ff;border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <span>📟 Sonstiges</span><strong>8%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Geräte view (hidden) -->
+        <div id="ins-geraete" style="display:none;">
+          <div class="bubble-area">
+            <div class="bubble" style="width:95px;height:95px;background:#ffd4a3;top:30px;left:10px;">
+              <span class="b-icon">🫙</span>
+              <span class="b-kwh">9.4 kWh</span>
+            </div>
+            <div class="bubble" style="width:80px;height:80px;background:#b3d4ff;top:10px;left:120px;">
+              <span class="b-icon">💻</span>
+              <span class="b-kwh">3.6 kWh</span>
+            </div>
+            <div class="bubble" style="width:105px;height:105px;background:#ffb3ba;top:20px;right:5px;">
+              <span class="b-icon">❄️</span>
+              <span class="b-kwh">12.2 kWh</span>
+            </div>
+            <div class="bubble" style="width:70px;height:70px;background:#b3d9b3;bottom:30px;left:5px;">
+              <span class="b-icon">📺</span>
+              <span class="b-kwh">5.9 kWh</span>
+            </div>
+            <div class="bubble" style="width:85px;height:85px;background:#e8b3ff;bottom:20px;left:100px;">
+              <span class="b-icon">📱</span>
+              <span class="b-kwh">7.3 kWh</span>
+            </div>
+            <div class="bubble" style="width:65px;height:65px;background:#c8f5c8;bottom:20px;right:40px;">
+              <span class="b-icon">📱</span>
+              <span class="b-kwh">2.2 kWh</span>
+            </div>
+            <div class="bubble" style="width:55px;height:55px;background:#fff3b3;bottom:5px;right:0;">
+              <span class="b-icon">💡</span>
+              <span class="b-kwh">3.1 kWh</span>
+            </div>
+            <div class="bubble" style="width:60px;height:60px;background:#ffd4a3;top:80px;left:90px;">
+              <span class="b-icon">🍽️</span>
+              <span class="b-kwh">2.1 kWh</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:0 16px 10px;">
+        <div style="font-size:13px;text-align:center;color:var(--text2);margin-bottom:10px;">
+          Erhalte Einblicke in Verbrauch, Kosten und Emissionen beim Klicken auf eine Geräteklasse
+        </div>
+        <button onclick="navTo('automation')" style="width:100%;background:#1c1c1e;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+          💡 Geräte automatisieren
+        </button>
+        <div style="text-align:center;padding:12px 0;font-size:14px;color:var(--text2);cursor:pointer;">
+          ⬇ Insights herunterladen
+        </div>
+      </div>
+    </div><!-- /insights -->
+
+
+    <!-- ══════════════════════════════
+         SCREEN 4: AUTOMATION
+    ══════════════════════════════ -->
+    <div class="screen" id="automation">
+      <div class="screen-header">
+        <span class="screen-title">Automation</span>
+        <div class="avatar"></div>
+      </div>
+
+      <div class="search-bar" style="margin-top:10px;">
+        <span>💡</span>
+        <span>Formuliere dein Ziel</span>
+      </div>
+
+      <div class="section-title">Vorschläge</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 8px;">Verwende einen der Vorschläge oder formuliere selbst</div>
+      <div class="suggest-cards">
+        <div class="suggest-card">Ich möchte meine Waschmaschine nur zu den günstigsten Zeiten nutzen</div>
+        <div class="suggest-card">Ich möchte, dass sich alle Standby Geräte 3 Stunden nach Sonnenuntergang ausschalten</div>
+        <div class="suggest-card">Ich möchte alle meine Lichter ausschalten, wenn niemand mehr Zuhause ist</div>
+      </div>
+      <div style="padding:8px 16px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        Weitere Vorschläge entdecken <span>›</span>
+      </div>
+
+      <div class="section-title">Empfehlungen</div>
+      <div style="font-size:12px;color:var(--text2);padding:0 16px 8px;">Automationen mit denen du richtig Geld sparen kannst</div>
+      <div class="rec-cards">
+        <div class="rec-card">Wasche wenn Strom zu mind. 95 Prozent aus erneuerbaren Energien kommt</div>
+        <div class="rec-card">Schalte die Beleuchtung automatisch aus, sobald die letzte Person das Zuhause verlassen hat</div>
+      </div>
+      <div style="padding:8px 16px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        Weitere Empfehlungen entdecken <span>›</span>
+      </div>
+
+      <!-- Automationen / Szenen tabs -->
+      <div class="chart-section" style="margin:0 16px 4px;">
+        <div class="chart-tabs" style="margin-bottom:12px;">
+          <div class="chart-tab active" onclick="chartTab(0,'auto')">Automationen</div>
+          <div class="chart-tab" onclick="chartTab(1,'auto')">Szenen</div>
+        </div>
+        <div id="auto-list">
+          <div class="auto-item" style="border-radius:12px 12px 0 0;margin:0 -16px;">
+            <div class="auto-icon-wrap" style="background:#ffd4a3;">🫙</div>
+            <div class="auto-text">
+              <div class="auto-name">Waschmaschine</div>
+              <div class="auto-desc">Schaltet die Waschmaschine zu niedrigen Preisen ein</div>
+            </div>
+            <div class="auto-chevron">›</div>
+          </div>
+          <div class="auto-item" style="margin:0 -16px;">
+            <div class="auto-icon-wrap" style="background:#ffd4a3;">📺</div>
+            <div class="auto-text">
+              <div class="auto-name">Fernseher</div>
+              <div class="auto-desc">Schaltet den Fernseher in der Nacht vollständig aus</div>
+            </div>
+            <div class="auto-chevron">›</div>
+          </div>
+          <div class="auto-item" style="margin:0 -16px;">
+            <div class="auto-icon-wrap" style="background:#ffd4a3;">👔</div>
+            <div class="auto-text">
+              <div class="auto-name">Trockner</div>
+              <div class="auto-desc">Lässt den Trockner zur Mittagszeit starten</div>
+            </div>
+            <div class="auto-chevron">›</div>
+          </div>
+          <div class="auto-item" style="border-radius:0 0 12px 12px;margin:0 -16px;">
+            <div class="auto-icon-wrap" style="background:#b3d4ff;">💡</div>
+            <div class="auto-text">
+              <div class="auto-name">Küchenlampe</div>
+              <div class="auto-desc">Schaltet die Lampen nach dem Verlassen der Küche aus</div>
+            </div>
+            <div class="auto-chevron">›</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:6px 16px 12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        Weitere Automationen anzeigen <span>›</span>
+      </div>
+
+      <!-- Galerie -->
+      <div class="card">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;">Galerie</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Automationen — Geräte smarter steuern</div>
+        <div class="gallery-chips">
+          <div class="gallery-chip"><span>💡</span> Smarte Beleuchtung <span class="plus">+</span></div>
+          <div class="gallery-chip"><span>📟</span> Standby Modus <span class="plus">+</span></div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);margin:8px 0;">Szenen — Kosten und Emissionen im Haushalt zu sparen</div>
+        <div class="gallery-chips">
+          <div class="gallery-chip" style="background:#fff3b3;">💰 Günstig Waschen <span class="plus">+</span></div>
+          <div class="gallery-chip" style="background:#b3f0ff;">❄️ Clever Kühlen <span class="plus">+</span></div>
+        </div>
+      </div>
+
+      <button class="impact-btn" onclick="navTo('impact')">
+        ⚡ Impact anzeigen
+      </button>
+    </div><!-- /automation -->
+
+
+    <!-- ══════════════════════════════
+         SCREEN 5: IMPACT
+    ══════════════════════════════ -->
+    <div class="screen" id="impact">
+      <div class="screen-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">🌿</span>
+          <span class="screen-title">Impact</span>
+        </div>
+        <div class="avatar"></div>
+      </div>
+
+      <!-- Period tabs -->
+      <div class="chip-row" style="padding:10px 16px 6px;">
+        <div class="chip pill active" onclick="periodTab(this)">Tage</div>
+        <div class="chip pill" onclick="periodTab(this)">Monate</div>
+        <div class="chip pill" onclick="periodTab(this)">Jahr</div>
+        <div class="chip pill" onclick="periodTab(this)">Individuell</div>
+      </div>
+      <div class="period-nav" style="padding:2px 16px 10px;">
+        <span class="nav-arrow">‹</span>
+        <span>Heute</span>
+        <span class="nav-arrow">›</span>
+      </div>
+
+      <!-- Hero -->
+      <div class="impact-hero">
+        <div class="impact-num">424</div>
+        <div class="impact-unit">Gramm CO₂eq Einsparungen</div>
+      </div>
+
+      <!-- Daily bar chart -->
+      <div class="chart-section">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:4px;height:90px;margin-bottom:4px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">623</span>
+            <div style="width:100%;height:70px;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;">
+              <div style="position:absolute;bottom:0;width:100%;height:60%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">3</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">481</span>
+            <div style="width:100%;height:54px;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;">
+              <div style="position:absolute;bottom:0;width:100%;height:55%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">4</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">581</span>
+            <div style="width:100%;height:65px;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;">
+              <div style="position:absolute;bottom:0;width:100%;height:58%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">5</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">612</span>
+            <div style="width:100%;height:68px;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;">
+              <div style="position:absolute;bottom:0;width:100%;height:62%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">6</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">311</span>
+            <div style="width:100%;height:35px;background:#c8e6c9;border-radius:4px 4px 0 0;position:relative;">
+              <div style="position:absolute;bottom:0;width:100%;height:50%;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text2);">7</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">424</span>
+            <div style="width:100%;height:48px;background:var(--green);border-radius:4px 4px 0 0;"></div>
+            <span style="font-size:11px;font-weight:700;background:#1c1c1e;color:#fff;border-radius:10px;padding:1px 6px;">8</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <span style="font-size:10px;color:var(--text2);">202</span>
+            <div style="width:100%;height:23px;background:#e5e5ea;border-radius:4px 4px 0 0;"></div>
+            <span style="font-size:10px;color:var(--text2);">9</span>
+          </div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--text2);">[Gramm]&nbsp;&nbsp;Tage&nbsp;&nbsp;<span style="color:#aaa">9 = Prognose</span></div>
+      </div>
+
+      <!-- Renewable banners -->
+      <div class="renew-row">
+        <div class="renew-card wind">
+          <div class="renew-num">80 Prozent</div>
+          <div class="renew-label">Erneuerbare Energien</div>
+        </div>
+        <div class="renew-card tree">
+          <div class="renew-num">12 Prozent</div>
+          <div class="renew-label">Energieeinsparung</div>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="period-nav" style="padding:6px 16px;">
+        <span class="nav-arrow">‹</span>
+        <span>März 2025</span>
+        <span class="nav-arrow">›</span>
+      </div>
+      <div style="padding:4px 16px;margin-bottom:4px;">
+        <button style="background:#1c1c1e;color:#fff;border:none;border-radius:12px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;">Vergleich</button>
+      </div>
+
+      <div class="compare-section">
+        <div class="compare-card best">
+          <span class="compare-icon">🏁</span>
+          <div class="compare-text">
+            <div class="compare-name">10% Nachhaltigsten</div>
+            <div class="compare-val">6456 Gramm CO₂eq</div>
+          </div>
+        </div>
+        <div class="compare-card mine">
+          <span class="compare-icon">🏠</span>
+          <div class="compare-text">
+            <div class="compare-name">Dein Zuhause</div>
+            <div class="compare-val">6856 Gramm CO₂eq</div>
+          </div>
+        </div>
+        <div class="compare-card community" onclick="showOverlay()">
+          <span class="compare-icon">👥</span>
+          <div class="compare-text">
+            <div class="compare-name">Energized Community</div>
+            <div class="compare-val">7301 Gramm CO₂eq</div>
+          </div>
+        </div>
+        <div class="compare-card avg">
+          <span class="compare-icon">🌍</span>
+          <div class="compare-text">
+            <div class="compare-name">Durschnitt in Deutschland</div>
+            <div class="compare-val">8747 Gramm CO₂eq</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Milestones -->
+      <div class="chip-row" style="padding:4px 16px 10px;">
+        <div class="chip active">Meilensteine</div>
+        <div class="chip">Badges</div>
+      </div>
+
+      <div class="milestone" style="border:2px solid #ffd60a;">
+        <div class="ms-icon">☀️</div>
+        <div class="ms-text">
+          <div class="ms-title">Erneuerbare Energien nutzen</div>
+          <div class="ms-sub">> 80 Prozent EE pro Tag</div>
+        </div>
+        <div class="ms-badge green">5/8 Tage</div>
+      </div>
+      <div class="milestone" style="border:2px solid #ffd60a;">
+        <div class="ms-icon">⚡</div>
+        <div class="ms-text">
+          <div class="ms-title">Energie einsparen</div>
+          <div class="ms-sub">-10 Prozent ggü. Vorjahresmonat</div>
+        </div>
+        <div class="ms-badge red">-7 Prozent</div>
+      </div>
+      <div class="milestone" style="border:2px solid #ffd60a;">
+        <div class="ms-icon">💰</div>
+        <div class="ms-text">
+          <div class="ms-title">Kosten reduzieren</div>
+          <div class="ms-sub">< 16 Cent pro kWh</div>
+        </div>
+        <div class="ms-badge orange">19.1 Cent</div>
+      </div>
+      <div class="milestone" style="border:2px solid #ffd60a;">
+        <div class="ms-icon">🌿</div>
+        <div class="ms-text">
+          <div class="ms-title">Emissionen minimieren</div>
+          <div class="ms-sub">< 180 Gramm CO₂eq pro kWh</div>
+        </div>
+        <div class="ms-badge red">192 g CO₂eq</div>
+      </div>
+
+      <div style="padding:12px 16px;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+        Weitere Meilensteine anzeigen <span>›</span>
+      </div>
+    </div><!-- /impact -->
+
+  </div><!-- /screen-wrap -->
+
+  <!-- ── Bottom navigation ── -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-zuhause" onclick="navTo('zuhause')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Zuhause</div>
+    </div>
+    <div class="nav-item" id="nav-speicher" onclick="navTo('speicher')">
+      <div class="nav-icon">🔋</div>
+      <div class="nav-label">Speicher</div>
+    </div>
+    <div class="nav-item" id="nav-insights" onclick="navTo('insights')">
+      <div class="nav-icon">📈</div>
+      <div class="nav-label">Insights</div>
+    </div>
+    <div class="nav-item" id="nav-automation" onclick="navTo('automation')">
+      <div class="nav-icon">💡</div>
+      <div class="nav-label">Automation</div>
+    </div>
+    <div class="nav-item" id="nav-impact" onclick="navTo('impact')">
+      <div class="nav-icon">🌿</div>
+      <div class="nav-label">Impact</div>
+    </div>
+  </div>
+
+  <!-- ── Community overlay ── -->
+  <div class="overlay" id="overlay" onclick="hideOverlay(event)">
+    <div class="overlay-sheet">
+      <div class="overlay-handle"></div>
+      <div style="position:relative;padding:0 16px 0;">
+        <div class="overlay-hero" style="margin:0 0 14px;">
+          <div class="overlay-hero-num">1293 t CO₂eq</div>
+          <div class="overlay-hero-text">konnten bisher im März 2025 durch die Energized Community eingespart werden</div>
+        </div>
+        <div class="overlay-body">
+          <p>Als Energized Community unterstützen wir mit unserem Cloud-Energiespeicher die maximale Nutzung erneuerbarer Energien. Solar- und Windenergie unterliegen natürlichen Schwankungen – doch mit intelligenten, vernetzten Speichern kann überschüssiger Strom gespeichert und genau dann genutzt werden, wenn er benötigt wird.</p>
+          <p>Der Cloud-Energiespeicher lädt genau dann, wenn günstige erneuerbare Energie verfügbar ist – sei es durch eine hohe Sonneneinstrahlung am Mittag oder starken Wind in der Nacht. Zudem bestimmt der intelligente Algorithmus von Energized kontinuierlich ob der Strom für dich nun aus dem Speicher oder direkt aus dem Strommarkt bezogen werden soll, um nicht nur die Kosten sondern auch die Emissionen zu minimieren.</p>
+        </div>
+        <!-- Mini chart inside overlay -->
+        <div style="margin:0 16px 12px;background:#f9f9f9;border-radius:12px;padding:12px;">
+          <svg viewBox="0 0 300 80" class="chart">
+            <rect x="0" y="40" width="8" height="20" fill="#34c759" rx="2"/>
+            <rect x="12" y="30" width="8" height="30" fill="#34c759" rx="2"/>
+            <rect x="24" y="20" width="8" height="40" fill="#34c759" rx="2"/>
+            <rect x="36" y="15" width="8" height="45" fill="#34c759" rx="2"/>
+            <rect x="48" y="10" width="8" height="50" fill="#34c759" rx="2"/>
+            <rect x="60" y="5" width="8" height="55" fill="#34c759" rx="2"/>
+            <rect x="72" y="0" width="8" height="60" fill="#34c759" rx="2"/>
+            <rect x="84" y="50" width="8" height="5" fill="#34c759" rx="2"/>
+            <rect x="96" y="55" width="8" height="15" fill="#e05252" rx="2"/>
+            <rect x="108" y="45" width="8" height="25" fill="#e05252" rx="2"/>
+            <rect x="120" y="35" width="8" height="35" fill="#e05252" rx="2"/>
+            <rect x="132" y="30" width="8" height="40" fill="#e05252" rx="2"/>
+            <rect x="144" y="28" width="8" height="42" fill="#e05252" rx="2"/>
+            <rect x="156" y="25" width="8" height="45" fill="#e05252" rx="2"/>
+            <line x1="0" y1="78" x2="300" y2="78" stroke="#e5e5ea" stroke-width="1"/>
+            <text x="0" y="78" font-size="7" fill="#999">02</text>
+            <text x="60" y="78" font-size="7" fill="#999">10</text>
+            <text x="120" y="78" font-size="7" fill="#999">16</text>
+            <text x="180" y="78" font-size="7" fill="#999">20</text>
+          </svg>
+          <div style="display:flex;gap:14px;font-size:11px;color:var(--text2);margin-top:6px;">
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;margin-right:3px;"></span>Speicher laden</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--red);border-radius:2px;margin-right:3px;"></span>Speicher entladen</span>
+          </div>
+        </div>
+        <div class="overlay-body">
+          <p>Mit dem Cloud-Energiespeicher steigerst du den Anteil erneuerbarer Energien in deinem Strommix und reduzierst die Emissionen für deinen Stromverbrauch. Dadurch kannst du aktiv Emissionen einsparen und das Klima schützen.</p>
+        </div>
+        <div style="display:flex;gap:10px;margin:0 16px 16px;">
+          <div style="flex:1;background:linear-gradient(135deg,#1e6b2e,#2d5a1b);border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:13px;color:#aef;font-weight:600;">Deine Einsparungen 2025</div>
+          </div>
+          <div style="flex:1;background:linear-gradient(135deg,#1e6b2e,#2d5a1b);border-radius:14px;padding:14px;text-align:center;color:#fff;">
+            <div style="font-size:22px;font-weight:800;">30.8</div>
+            <div style="font-size:12px;opacity:.9;">Kilogramm CO₂eq</div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:0 16px 10px;font-size:15px;font-weight:600;cursor:pointer;">
+          Jetzt mit Freunden teilen ↑
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+// ── Bar chart data ──
+const zhData = [80,120,200,300,450,800,1200,1600,1400,900,400,200,100,50,20,
+  -100,-200,-400,-700,-900,-800,-600,-400,-200];
+const spData = [60,100,180,280,420,750,1100,1500,1300,850,380,180,90,40,15,
+  -80,-180,-380,-680,-880,-780,-580,-380,-180];
+const kostenData = [5,8,15,22,30,40,50,60,55,45,30,20,12,8,4,
+  2,1,2,3,5,4,3,2,1];
+
+function renderBars(containerId, data, maxH=120) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const max = Math.max(...data.map(Math.abs));
+  const mid = maxH / 2;
+  el.innerHTML = '';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.gap = '2px';
+  el.style.padding = '0 2px';
+  data.forEach(v => {
+    const bar = document.createElement('div');
+    bar.style.flex = '1';
+    bar.style.minWidth = '4px';
+    bar.style.borderRadius = v >= 0 ? '3px 3px 0 0' : '0 0 3px 3px';
+    const h = Math.max(3, Math.abs(v) / max * (maxH/2 - 4));
+    bar.style.height = h + 'px';
+    bar.style.background = v >= 0 ? '#34c759' : '#e05252';
+    bar.style.alignSelf = v >= 0 ? 'flex-end' : 'flex-start';
+    el.appendChild(bar);
+  });
+}
+renderBars('zh-chart', zhData);
+renderBars('sp-chart', spData);
+renderBars('kosten-chart', kostenData.map(v => v), 80);
+
+// ── Navigation ──
+const screens = ['zuhause','speicher','insights','automation','impact'];
+
+function navTo(id) {
+  screens.forEach(s => {
+    document.getElementById(s).classList.remove('active');
+    document.getElementById('nav-'+s).classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  // scroll to top
+  document.querySelector('.screen-wrap').scrollTop = 0;
+}
+
+function dayTab(idx) {
+  document.querySelectorAll('.day-tab').forEach((t,i) => {
+    t.classList.toggle('active', i===idx);
+  });
+}
+
+function periodTab(el) {
+  el.closest('.chip-row').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function chartTab(idx, group) {
+  const maps = {
+    zh: [null, null],
+    sp: [null, null],
+    preis: [null, null],
+    kosten: [null, null],
+    auto: ['auto-list', null],
+    anlage: [null, null],
+  };
+  // just toggle the tab style
+  const wrap = event.target.closest('.chart-section') || event.target.closest('.card');
+  if (wrap) {
+    wrap.querySelectorAll('.chart-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  }
+}
+
+function insightsTab(view) {
+  document.getElementById('ins-kategorien').style.display = view==='kategorien' ? '' : 'none';
+  document.getElementById('ins-geraete').style.display = view==='geraete' ? '' : 'none';
+  document.getElementById('ins-kat-tab').classList.toggle('active', view==='kategorien');
+  document.getElementById('ins-dev-tab').classList.toggle('active', view==='geraete');
+}
+
+// ── Overlay ──
+function showOverlay() {
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay(e) {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('show');
+  }
+}
+</script>
+</body>
+</html>
